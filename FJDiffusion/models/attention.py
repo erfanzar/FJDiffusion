@@ -22,25 +22,34 @@ class SelfAttentionWC(nn.Module):
     def setup(self) -> None:
         self.qkv = nn.Dense(self.features * 3, use_bias=self.in_proj_b)
         self.o = nn.Dense(self.features, use_bias=self.out_proj_b)
-        self.dim_heads = self.features // self.num_attention_heads
+        self.head_dim = self.features // self.num_attention_heads
+
+    def _split_heads(self, hidden_states):
+        return hidden_states.reshape(hidden_states.shape[:2] + (self.num_attention_heads, self.head_dim))
 
     def __call__(self, x, use_causal_mask: bool = False):
-        shape = x.shape,
+        shape = x.shape
         b, s, d = x.shape
+
         q, k, v = jnp.split(self.qkv(x), 3, axis=-1)
-        q = einops.rearrange(q, 'b s (h d) -> b h s d', h=self.num_attention_heads)
-        k = einops.rearrange(k, 'b s (h d) -> b h s d', h=self.num_attention_heads)
-        v = einops.rearrange(v, 'b s (h d) -> b h s d', h=self.num_attention_heads)
-        mask = jnp.where(nn.attention.make_causal_mask(nn.ones((b, s))) == 1, 0,
+        q = with_sharding_constraint(q, PS(('dp', 'fsdp'), None, 'mp'))
+        v = with_sharding_constraint(v, PS(('dp', 'fsdp'), None, 'mp'))
+        k = with_sharding_constraint(k, PS(('dp', 'fsdp'), None, 'mp'))
+        q = einops.rearrange(q, 'b s (h d) -> b s h d', h=self.num_attention_heads)
+        k = einops.rearrange(k, 'b s (h d) -> b s h d', h=self.num_attention_heads)
+        v = einops.rearrange(v, 'b s (h d) -> b s h d', h=self.num_attention_heads)
+
+        mask = jnp.where(nn.attention.make_causal_mask(jnp.ones((b, s))) == 1, 0,
                          jnp.finfo(q).min) if use_causal_mask else None
+
         attn = nn.attention.dot_product_attention_weights(
             query=q, key=k,
             precision=self.precision,
             dtype=self.dtype,
             mask=mask
         )
-
-        attn = (attn @ v).swapaxes(1, 2).reshape(shape)
+        attn = with_sharding_constraint(attn, PS(('dp', 'fsdp'), 'mp', None, None))
+        attn = jnp.einsum('...hqk,...khd->...qhd', attn, v).reshape(shape)
         return self.o(attn)
 
 
