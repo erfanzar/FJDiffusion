@@ -81,3 +81,17 @@ class UpSampleConv(nn.Module):
             raise ValueError
         x = jax.image.resize(x, (height * 2, weight * 2), method='nearest')
         return self.conv(x)
+
+
+class UpSampleFlax(nn.Module):
+    factor_size: int = 2
+    method: str = 'bilinear'
+
+    def __call__(self, x):
+        if x.ndim == 3:
+            height, weight, _ = x.shape
+        elif x.ndim == 4:
+            _, height, weight, _ = x.shape
+        else:
+            raise ValueError
+        return jax.image.resize(x, (height * self.factor_size, weight * self.factor_size), method=self.method)

@@ -1,6 +1,5 @@
 from jax import numpy as jnp
 from FJDiffusion.utils import get_alpha_cup
-import jax
 import numpy as np
 
 

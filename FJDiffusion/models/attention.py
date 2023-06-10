@@ -299,7 +299,7 @@ class AttentionBlock(nn.Module):
         self.group_norm = nn.GroupNorm(32)
         self.conv_inp = nn.Conv(ch, kernel_size=(1, 1), padding=(1, 1))
         self.norm_1 = nn.LayerNorm()
-        self.attn_1 = SelfAttention(features=ch, num_attention_heads=self.num_attention_heads)
+        self.attn_1 = SelfAttentionWC(features=ch, num_attention_heads=self.num_attention_heads)
         self.norm_2 = nn.LayerNorm()
         self.attn_2 = CrossAttention(features=ch, num_attention_heads=self.num_attention_heads)
         self.norm_3 = nn.LayerNorm()
