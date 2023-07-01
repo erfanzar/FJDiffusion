@@ -48,7 +48,9 @@ class UnetModel(nn.Module):
             SwitchSequential([ResidualBlock(self.feature_start), AttentionBlock(8, 40)]),
         ]
 
-    def __call__(self, x, context, time):
+    def __call__(self, x, time, context=None):
+        context = x if context is None else context
+
         route = []
         for layers in self.encoder:
             x = layers(x, context=context, time=time)
