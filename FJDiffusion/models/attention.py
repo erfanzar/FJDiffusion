@@ -327,3 +327,15 @@ class AttentionBlock(nn.Module):
         x = x.swapaxes(-1, -2)
         x = x.reshape(b, w, h, c)
         return self.out(x) + residual
+
+
+def get_pos_embedding(time, channel, complex_=False):
+    freq_cis = 1 / 10000 ** (jnp.arange(0, channel, 2) / channel)
+    time = jnp.repeat(time, (1, channel // 2))
+    if complex_:
+        freq_cis = jnp.outer(time, freq_cis)
+        sin = jnp.sin(freq_cis)
+        cos = jnp.cos(freq_cis)
+        return jnp.complex64(cos + 1j * sin)
+    else:
+        return jnp.concatenate([jnp.sin(time * freq_cis), jnp.cos(time * freq_cis)], axis=-1)
