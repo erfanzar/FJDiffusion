@@ -26,9 +26,11 @@ class UnetModel(nn.Module):
             SwitchSequential([ResidualBlock(self.feature_start * 4, True)]),
         ]
         self.bottle_neck = SwitchSequential(
-            ResidualBlock(1280),
-            AttentionBlock(8, 160),
-            ResidualBlock(1280)
+            [
+                ResidualBlock(1280),
+                AttentionBlock(8, 160),
+                ResidualBlock(1280)
+            ]
         )
 
         self.decoder = [

@@ -8,6 +8,7 @@ __pycache__/
 env.ipynb
 test.py
 env.py
+image.jpg
 # Distribution / packaging
 .Python
 build/
