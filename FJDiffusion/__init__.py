@@ -1,2 +1,2 @@
-from .models import UnetModel, CLIP, Diffusion, Encoder, Decoder
+from .models import UnetModel, CLIP, DiffusionCA, Encoder, Decoder
 from .samplers import KLMSSampler, KEulerSampler, KEulerAncestralSampler

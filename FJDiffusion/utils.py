@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+import numpy as np
 
 
 def pre_compute_time_embeddings(time_step, base: int = 10000, dim: int = 128, dtype: jnp.dtype = jnp.float32):
@@ -19,3 +20,11 @@ def get_alpha_cup(beta_start=0.00085, beta_end=0.0120, training_steps=1000, dtyp
     alphas = 1.0 - betas
     alphas_cumprod = jnp.cumprod(alphas, axis=0)
     return alphas_cumprod
+
+
+def preprocess_image(x):
+    return ((x / 255) * 2) - 1
+
+
+def past_process_image(x):
+    return np.asarray(((x + 1) / 2) * 255, dtype=np.uint8)

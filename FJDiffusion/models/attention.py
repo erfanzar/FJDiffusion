@@ -18,6 +18,7 @@ class SelfAttentionWC(nn.Module):
     residual_f: int = -1
     in_proj_b: bool = False
     out_proj_b: bool = True
+    force_pjit: bool = False
 
     def setup(self) -> None:
         self.qkv = nn.Dense(self.features * 3, use_bias=self.in_proj_b)
@@ -32,9 +33,10 @@ class SelfAttentionWC(nn.Module):
         b, s, d = x.shape
 
         q, k, v = jnp.split(self.qkv(x), 3, axis=-1)
-        q = with_sharding_constraint(q, PS(('dp', 'fsdp'), None, 'mp'))
-        v = with_sharding_constraint(v, PS(('dp', 'fsdp'), None, 'mp'))
-        k = with_sharding_constraint(k, PS(('dp', 'fsdp'), None, 'mp'))
+        if self.force_pjit:
+            q = with_sharding_constraint(q, PS(('dp', 'fsdp'), None, 'mp'))
+            v = with_sharding_constraint(v, PS(('dp', 'fsdp'), None, 'mp'))
+            k = with_sharding_constraint(k, PS(('dp', 'fsdp'), None, 'mp'))
         q = einops.rearrange(q, 'b s (h d) -> b s h d', h=self.num_attention_heads)
         k = einops.rearrange(k, 'b s (h d) -> b s h d', h=self.num_attention_heads)
         v = einops.rearrange(v, 'b s (h d) -> b s h d', h=self.num_attention_heads)
@@ -60,6 +62,7 @@ class SelfAttention(nn.Module):
     param_dtype: jnp.dtype = jnp.float32
     precision = None
     residual_f: int = -1
+    force_pjit: bool = False
 
     def setup(self):
         self.head_dim = self.features // self.num_attention_heads
@@ -106,18 +109,17 @@ class SelfAttention(nn.Module):
     def __call__(
             self,
             hidden_states,
-
             deterministic: bool = False,
-
     ):
         shape = hidden_states.shape
         if hidden_states.ndim != 3:
             b = hidden_states.shape[0]
             hidden_states = hidden_states.reshape(b, -1, self.num_attention_heads * self.head_dim)
         xq, xk, xv = self.q_proj(hidden_states), self.k_proj(hidden_states), self.v_proj(hidden_states)
-        xq = with_sharding_constraint(xq, PS(("dp", "fsdp"), None, "mp"))
-        xk = with_sharding_constraint(xk, PS(("dp", "fsdp"), None, "mp"))
-        xv = with_sharding_constraint(xv, PS(("dp", "fsdp"), None, "mp"))
+        if self.force_pjit:
+            xq = with_sharding_constraint(xq, PS(("dp", "fsdp"), None, "mp"))
+            xk = with_sharding_constraint(xk, PS(("dp", "fsdp"), None, "mp"))
+            xv = with_sharding_constraint(xv, PS(("dp", "fsdp"), None, "mp"))
         xq = self._split_heads(xq)
         xk = self._split_heads(xk)
         xv = self._split_heads(xv)
@@ -142,6 +144,7 @@ class CrossAttention(nn.Module):
     param_dtype: jnp.dtype = jnp.float32
     precision = None
     residual_f: int = -1
+    force_pjit: bool = False
 
     def setup(self):
         self.head_dim = self.features // self.num_attention_heads
@@ -202,9 +205,10 @@ class CrossAttention(nn.Module):
         y = self._check_input(y)
         x = self._check_input(x)
         xq, xk, xv = self.q_proj(x), self.k_proj(y), self.v_proj(y)
-        xq = with_sharding_constraint(xq, PS(("dp", "fsdp"), None, "mp"))
-        xk = with_sharding_constraint(xk, PS(("dp", "fsdp"), None, "mp"))
-        xv = with_sharding_constraint(xv, PS(("dp", "fsdp"), None, "mp"))
+        if self.force_pjit:
+            xq = with_sharding_constraint(xq, PS(("dp", "fsdp"), None, "mp"))
+            xk = with_sharding_constraint(xk, PS(("dp", "fsdp"), None, "mp"))
+            xv = with_sharding_constraint(xv, PS(("dp", "fsdp"), None, "mp"))
         xq = self._split_heads(xq)
         xk = self._split_heads(xk)
         xv = self._split_heads(xv)
