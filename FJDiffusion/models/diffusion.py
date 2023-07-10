@@ -75,7 +75,7 @@ class TE(nn.Module):
         return self.d2(nn.silu(self.d1(x)))
 
 
-class Diffusion(nn.Module):
+class DiffusionCA(nn.Module):
     in_channels: int = 4
     feature_start: int = 320
 

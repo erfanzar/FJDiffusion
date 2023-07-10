@@ -1,6 +1,5 @@
 import jax.numpy as jnp
-from flax import linen as nn
-import jax
+import numpy as np
 
 
 def pre_compute_time_embeddings(time_step, base: int = 10000, dim: int = 128, dtype: jnp.dtype = jnp.float32):
@@ -23,43 +22,9 @@ def get_alpha_cup(beta_start=0.00085, beta_end=0.0120, training_steps=1000, dtyp
     return alphas_cumprod
 
 
-class FlaxUpsample2D(nn.Module):
-    out_channels: int
-    dtype: jnp.dtype = jnp.float32
-
-    def setup(self):
-        self.c = nn.Conv(
-            self.out_channels,
-            kernel_size=(3, 3),
-            strides=(1, 1),
-            padding=((1, 1), (1, 1)),
-            dtype=self.dtype,
-        )
-
-    def __call__(self, hidden_states):
-        batch, height, width, channels = hidden_states.shape
-        hidden_states = jax.image.resize(
-            hidden_states,
-            shape=(batch, height * 2, width * 2, channels),
-            method="nearest",
-        )
-        hidden_states = self.c(hidden_states)
-        return hidden_states
+def preprocess_image(x):
+    return ((x / 255) * 2) - 1
 
 
-class FlaxDownsample2D(nn.Module):
-    out_channels: int
-    dtype: jnp.dtype = jnp.float32
-
-    def setup(self):
-        self.c = nn.Conv(
-            self.out_channels,
-            kernel_size=(3, 3),
-            strides=(2, 2),
-            padding=((1, 1), (1, 1)),
-            dtype=self.dtype,
-        )
-
-    def __call__(self, hidden_states):
-        hidden_states = self.c(hidden_states)
-        return hidden_states
+def past_process_image(x):
+    return np.asarray(((x + 1) / 2) * 255, dtype=np.uint8)
