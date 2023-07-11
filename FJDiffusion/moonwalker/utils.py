@@ -2,7 +2,6 @@ from jax import numpy as jnp
 from flax import linen as nn
 import jax
 import typing
-from diffusers import FlaxUNet2DConditionModel
 
 
 class Upsample(nn.Module):
