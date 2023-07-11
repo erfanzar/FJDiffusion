@@ -9,8 +9,8 @@ class FlaxResnetBlock2D(nn.Module):
     in_c: int
     out_c: int = None
     use_shortcut: bool = None
-    dropout_prob: float = 0.0
-    eps: float = 1e-5
+    dropout_rate: float = 0.0
+    epsilon: float = 1e-5
     dtype: jnp.dtype = jnp.float32
     param_dtype: jnp.dtype = jnp.float32
     precision: typing.Optional[typing.Union[None, jax.lax.Precision]] = None
@@ -27,7 +27,7 @@ class FlaxResnetBlock2D(nn.Module):
             precision=self.precision
         )
         self.norm1 = nn.GroupNorm(
-            32, epsilon=self.eps
+            32, epsilon=self.epsilon
         )
 
         self.c2 = nn.Conv(
@@ -40,7 +40,7 @@ class FlaxResnetBlock2D(nn.Module):
             precision=self.precision
         )
         self.norm2 = nn.GroupNorm(
-            32, epsilon=self.eps
+            32, epsilon=self.epsilon
         )
 
         self.time_emb = nn.Dense(
@@ -50,7 +50,7 @@ class FlaxResnetBlock2D(nn.Module):
             precision=self.precision
         )
         self.drop = nn.Dropout(
-            self.dropout_prob
+            self.dropout_rate
         )
 
         cut = self.in_c != out_c if self.use_shortcut is None else self.use_shortcut

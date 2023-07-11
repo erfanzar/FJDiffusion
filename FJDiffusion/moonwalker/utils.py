@@ -1,11 +1,15 @@
 from jax import numpy as jnp
 from flax import linen as nn
 import jax
+import typing
 from diffusers import FlaxUNet2DConditionModel
+
 
 class Upsample(nn.Module):
     in_channels: int
     dtype: jnp.dtype = jnp.float32
+    param_dtype: jnp.dtype = jnp.float32
+    precision: typing.Optional[typing.Union[None, jax.lax.Precision]] = None
 
     def setup(self):
         self.conv = nn.Conv(
@@ -14,6 +18,8 @@ class Upsample(nn.Module):
             strides=(1, 1),
             padding=((1, 1), (1, 1)),
             dtype=self.dtype,
+            param_dtype=self.param_dtype,
+            precision=self.precsion
         )
 
     def __call__(self, hidden_states):
@@ -30,6 +36,8 @@ class Upsample(nn.Module):
 class Downsample(nn.Module):
     in_channels: int
     dtype: jnp.dtype = jnp.float32
+    param_dtype: jnp.dtype = jnp.float32
+    precision: typing.Optional[typing.Union[None, jax.lax.Precision]] = None
 
     def setup(self):
         self.conv = nn.Conv(
@@ -38,6 +46,8 @@ class Downsample(nn.Module):
             strides=(2, 2),
             padding="VALID",
             dtype=self.dtype,
+            param_dtype=self.param_dtype,
+            precision=self.precision
         )
 
     def __call__(self, hidden_states):
