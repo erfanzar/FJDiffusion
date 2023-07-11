@@ -5,9 +5,6 @@ from jax import numpy as jnp
 from flax import linen as nn
 
 
-
-
-
 class FlaxBaseAttn(nn.Module):
     query_dim: int
     num_attention_heads: int = 8
