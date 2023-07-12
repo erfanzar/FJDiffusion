@@ -126,14 +126,20 @@ class FlaxDecoder(nn.Module):
     precision: typing.Optional[typing.Union[None, jax.lax.Precision]] = None
 
     def setup(self) -> None:
+        self.conv_in = nn.Conv(
+            self.block_out_channels[-1],
+            kernel_size=(3, 3),
+            strides=(1, 1),
+            padding=((1, 1), (1, 1)),
+            dtype=self.dtype,
+            param_dtype=self.param_dtype,
+            precision=self.precision
+        )
         self.bottle_neck = FlaxUNetMidBlock2D(
-            in_channels=1,
-            num_attention_heads=-1,
-            num_hidden_layers=1,
+            in_channels=self.block_out_channels[-1],
+            num_attention_heads=None,
             dropout_rate=self.dropout_rate,
             epsilon=self.epsilon,
-            only_cross_attn=False,
-            use_linear_proj=self.us,
             dtype=self.dtype,
             param_dtype=self.param_dtype,
             precision=self.precision,
@@ -144,12 +150,16 @@ class FlaxDecoder(nn.Module):
                                policy=get_gradient_checkpointing_policy(
                                    self.gradient_checkpointing)) \
             if self.gradient_checkpointing != '' else FlaxUpDecoderBlock2D
+
+        reversed_block_out_channels = list(self.block_out_channels[::-1])
+        output_channel = reversed_block_out_channels[0]
         for i, name in enumerate(self.up_block_types):
             is_final_b = i == len(self.up_block_types) - 1
-            in_channels = self.in_channels if i == 0 else self.out_channels
+            prev_output_channel = output_channel
+            output_channel = reversed_block_out_channels[i]
             block = block_class(
-                in_channels=in_channels,
-                out_channels=self.out_channels,
+                in_channels=prev_output_channel,
+                out_channels=output_channel,
                 dropout_rate=self.dropout_rate,
                 add_up_sampler=not is_final_b,
                 epsilon=self.epsilon,
@@ -161,7 +171,7 @@ class FlaxDecoder(nn.Module):
             )
             decoders.append(block)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, hidden_state, deterministic: bool = True):
         ...
 
 
