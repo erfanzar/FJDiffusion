@@ -1,4 +1,6 @@
+import math
 import typing
+from functools import partial
 
 import jax
 from jax import numpy as jnp
@@ -307,3 +309,51 @@ class FlaxTransformerBlock2D(nn.Module):
                 hidden_state.reshape(batch, height, width, channels)
             )
         return self.dropout_layer(hidden_state + residual, deterministic=deterministic)
+
+
+class FlaxAttentionBlock(nn.Module):
+    channels: int
+    num_attention_heads: int = None
+    num_groups: int = 32
+    dtype: jnp.dtype = jnp.float32
+    param_dtype: jnp.dtype = jnp.float32
+    precision: typing.Optional[typing.Union[None, jax.lax.Precision]] = None
+
+    def setup(self):
+        self.num_heads = self.channels // self.num_attention_heads if self.num_attention_heads is not None else 1
+
+        dense = partial(nn.Dense, self.channels, dtype=self.dtype, param_dtype=self.param_dtype,
+                        precision=self.precision)
+
+        self.group_norm = nn.GroupNorm(num_groups=self.num_groups, epsilon=1e-6)
+        self.query, self.key, self.value = dense(), dense(), dense()
+        self.proj_attn = dense()
+
+    def transpose_for_scores(self, projection):
+        new_projection_shape = projection.shape[:-1] + (self.num_heads, -1)
+        new_projection = projection.reshape(new_projection_shape)
+        new_projection = jnp.transpose(new_projection, (0, 2, 1, 3))
+        return new_projection
+
+    def __call__(self, hidden_states):
+        residual = hidden_states
+        batch, height, width, channels = hidden_states.shape
+        hidden_states = self.group_norm(hidden_states)
+        hidden_states = hidden_states.reshape((batch, height * width, channels))
+        query = self.query(hidden_states)
+        key = self.key(hidden_states)
+        value = self.value(hidden_states)
+        query = self.transpose_for_scores(query)
+        key = self.transpose_for_scores(key)
+        value = self.transpose_for_scores(value)
+        scale = 1 / math.sqrt(math.sqrt(self.channels / self.num_heads))
+        attn_weights = jnp.einsum("...qc,...kc->...qk", query * scale, key * scale)
+        attn_weights = nn.softmax(attn_weights, axis=-1)
+        hidden_states = jnp.einsum("...kc,...qk->...qc", value, attn_weights)
+        hidden_states = jnp.transpose(hidden_states, (0, 2, 1, 3))
+        new_hidden_states_shape = hidden_states.shape[:-2] + (self.channels,)
+        hidden_states = hidden_states.reshape(new_hidden_states_shape)
+        hidden_states = self.proj_attn(hidden_states)
+        hidden_states = hidden_states.reshape((batch, height, width, channels))
+        hidden_states = hidden_states + residual
+        return hidden_states

@@ -1,8 +1,8 @@
 from jax import numpy as jnp
 import jax
 from flax import linen as nn
-from FJDiffusion.transformers.attn import FlaxTransformerBlock2D
-from FJDiffusion.transformers.resnet import FlaxResnetBlock2D
+from FJDiffusion.transformers.attn import FlaxTransformerBlock2D, FlaxAttentionBlock
+from FJDiffusion.transformers.resnet import FlaxResnetBlock2D, FlaxResnetBlock2DNTime
 from FJDiffusion.moonwalker.utils import Downsample, Upsample
 from FJDiffusion.transformers.utils import get_gradient_checkpointing_policy
 import typing
@@ -357,5 +357,76 @@ class FlaxUNetMidBlock2DCrossAttn(nn.Module):
         for attn, resnet in zip(self.attentions, self.resnets[1:]):
             hidden_states = attn(hidden_states, encoder_hidden_states, deterministic=deterministic)
             hidden_states = resnet(hidden_states, time, deterministic=deterministic)
+
+        return hidden_states
+
+
+class FlaxUNetMidBlock2D(nn.Module):
+    in_channels: int
+    num_attention_heads: int
+    num_hidden_layers: int = 1
+    dropout_rate: float = 0.0
+    epsilon: float = 1e-5
+    dtype: jnp.dtype = jnp.float32
+    param_dtype: jnp.dtype = jnp.float32
+    precision: typing.Optional[typing.Union[None, jax.lax.Precision]] = None
+    gradient_checkpointing: str = 'nothing_saveable'
+
+    def setup(self):
+        attention_block = nn.remat(
+            FlaxAttentionBlock,
+            policy=get_gradient_checkpointing_policy(self.gradient_checkpointing)
+        ) if self.gradient_checkpointing != '' else FlaxAttentionBlock
+        resnet_block = nn.remat(
+            FlaxResnetBlock2DNTime,
+            policy=get_gradient_checkpointing_policy(self.gradient_checkpointing)
+        ) if self.gradient_checkpointing != '' else FlaxResnetBlock2DNTime
+        resnets = [
+            resnet_block(
+                in_channels=self.in_channels,
+                out_channels=self.in_channels,
+                dropout_rate=self.dropout_rate,
+                epsilon=self.epsilon,
+                dtype=self.dtype,
+                param_dtype=self.param_dtype,
+                precision=self.precision
+            )
+        ]
+
+        attentions = []
+
+        for _ in range(self.num_layers):
+            attn_block = attention_block(
+                channels=self.in_channels,
+                num_attention_heads=self.num_attention_heads,
+                num_groups=32,
+                dtype=self.dtype,
+                param_dtype=self.param_dtype,
+                precision=self.precision
+            )
+            attentions.append(attn_block)
+
+            res_block = resnet_block(
+                in_channels=self.in_channels,
+                out_channels=self.in_channels,
+                dropout_rate=self.dropout_rate,
+                epsilon=self.epsilon,
+                dtype=self.dtype,
+                param_dtype=self.param_dtype,
+                precision=self.precision
+            )
+            resnets.append(res_block)
+
+        self.resnets = resnets
+        self.attentions = attentions
+
+    def __call__(self,
+                 hidden_states: jnp.DeviceArray,
+                 deterministic=True
+                 ):
+        hidden_states = self.resnets[0](hidden_states)
+        for attn, resnet in zip(self.attentions, self.resnets[1:]):
+            hidden_states = attn(hidden_states, deterministic=deterministic)
+            hidden_states = resnet(hidden_states, deterministic=deterministic)
 
         return hidden_states
