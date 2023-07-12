@@ -1,8 +1,8 @@
 from flax import linen as nn
 from jax import numpy as jnp
 
-from FJDiffusion.models.util_models import SwitchSequential, UpSampleConv
-from FJDiffusion.models.attention import ResidualBlock, AttentionBlock
+from FJDiffusion.util_models.util_models import SwitchSequential, UpSampleConv
+from FJDiffusion.util_models.attention import ResidualBlock, AttentionBlock
 
 
 class UnetModel(nn.Module):

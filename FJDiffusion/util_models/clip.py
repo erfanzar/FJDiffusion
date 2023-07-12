@@ -1,6 +1,6 @@
 from flax import linen as nn
 from jax import numpy as jnp
-from FJDiffusion.models.attention import SelfAttentionWC
+from FJDiffusion.util_models.attention import SelfAttentionWC
 
 
 class CLIP(nn.Module):

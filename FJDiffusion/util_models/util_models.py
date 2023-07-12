@@ -2,7 +2,7 @@ import einops
 import jax.nn.initializers
 from flax import linen as nn
 from jax import numpy as jnp
-from FJDiffusion.models.attention import AttentionBlock, ResidualBlock
+from FJDiffusion.util_models.attention import AttentionBlock, ResidualBlock
 
 
 class UConv(nn.Module):

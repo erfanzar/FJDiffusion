@@ -1,7 +1,7 @@
 from flax import linen as nn
 from jax import numpy as jnp
 from FJDiffusion.cdiffusion import CDiffusion
-from FJDiffusion.models import UnetModel
+from FJDiffusion.util_models import UnetModel
 
 
 class TTIDiffusion(nn.Module):

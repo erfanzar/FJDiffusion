@@ -1,10 +1,10 @@
 from jax import numpy as jnp
 import jax
 from flax import linen as nn
-from FJDiffusion.transformers.attn import FlaxTransformerBlock2D, FlaxAttentionBlock
-from FJDiffusion.transformers.resnet import FlaxResnetBlock2D, FlaxResnetBlock2DNTime
+from FJDiffusion.models.attn import FlaxTransformerBlock2D, FlaxAttentionBlock
+from FJDiffusion.models.resnet import FlaxResnetBlock2D, FlaxResnetBlock2DNTime
 from FJDiffusion.moonwalker.utils import Downsample, Upsample
-from FJDiffusion.transformers.utils import get_gradient_checkpointing_policy
+from FJDiffusion.models.utils import get_gradient_checkpointing_policy
 import typing
 
 

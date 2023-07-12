@@ -6,9 +6,9 @@ from flax import linen as nn
 from jax import numpy as jnp
 
 from FJDiffusion.moonwalker.utils import Downsample, Upsample
-from FJDiffusion.transformers.resnet import FlaxResnetBlock2DNTime
-from FJDiffusion.transformers.unet2d_blocks import FlaxUNetMidBlock2D
-from FJDiffusion.transformers.utils import get_gradient_checkpointing_policy
+from FJDiffusion.models.resnet import FlaxResnetBlock2DNTime
+from FJDiffusion.models.unet2d_blocks import FlaxUNetMidBlock2D
+from FJDiffusion.models.utils import get_gradient_checkpointing_policy
 import flax
 from FJDiffusion.moonwalker.utils import BaseOutput
 

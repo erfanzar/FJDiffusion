@@ -5,7 +5,7 @@ import flax.struct
 import jax.lax
 import jax.numpy as jnp
 from typing import Optional, Union, Tuple
-from FJDiffusion.transformers.unet2d_blocks import FlaxCrossAttnUpBlock, FlaxCrossAttnDownBlock, FlaxUpBlock2D, \
+from FJDiffusion.models.unet2d_blocks import FlaxCrossAttnUpBlock, FlaxCrossAttnDownBlock, FlaxUpBlock2D, \
     FlaxDownBlock2D, FlaxUNetMidBlock2DCrossAttn
 from FJDiffusion.moonwalker.utils import FlaxTimesteps, FlaxTimestepEmbedding, BaseOutput
 
@@ -16,7 +16,7 @@ class OutputType(BaseOutput):
 
 
 class Unet2DConditionModel(nn.Module):
-    sample_size: int = 32
+    hidden_size: int = 32
     in_channels: int = 4
     out_channels: int = 4
 
@@ -47,7 +47,7 @@ class Unet2DConditionModel(nn.Module):
 
     def init_weights(self, rng: jax.random.KeyArray):
 
-        sample = jnp.zeros((1, self.in_channels, self.sample_size, self.sample_size), dtype=self.dtype)
+        sample = jnp.zeros((1, self.in_channels, self.hidden_size, self.hidden_size), dtype=self.dtype)
         timesteps = jnp.ones((1,), dtype=jnp.int32)
         encoder_hidden_states = jnp.zeros((1, 1, self.cross_attention_dim), dtype=self.dtype)
 
