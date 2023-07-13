@@ -230,7 +230,8 @@ class Unet2DConfig(PretrainedConfig):
             ("net_2/kernel", PartitionSpec("fsdp")),
             ("norm_out/bias", PartitionSpec("fsdp")),
             ("c2/bias", PartitionSpec("fsdp")),
-            ("o/kernel", PartitionSpec("fsdp"))
+            ("o/kernel", PartitionSpec("fsdp")),
+            ('.*', PartitionSpec(None))
         ) if fully_fsdp else (
             ("norm_out/scale", PartitionSpec("fsdp", "mp")),
             ("conv_in/kernel", PartitionSpec("fsdp", "mp")),
@@ -268,5 +269,55 @@ class Unet2DConfig(PretrainedConfig):
             ("net_2/kernel", PartitionSpec("fsdp", "mp")),
             ("norm_out/bias", PartitionSpec("mp", "fsdp")),
             ("c2/bias", PartitionSpec("mp", "fsdp")),
-            ("o/kernel", PartitionSpec("mp", "fsdp"))
+            ("o/kernel", PartitionSpec("mp", "fsdp")),
+            ('.*', PartitionSpec(None))
         )
+
+
+def get_clip_partition_rules(fully_fsdp: bool = True):
+    return (
+        ("fc2/bias", PartitionSpec("fsdp")),
+        ("layer_norm1/bias", PartitionSpec("fsdp")),
+        ("fc1/kernel", PartitionSpec("fsdp")),
+        ("final_layer_norm/bias", PartitionSpec("fsdp")),
+        ("token_embedding/embedding", PartitionSpec("fsdp")),
+        ("layer_norm1/scale", PartitionSpec("fsdp")),
+        ("fc2/kernel", PartitionSpec("fsdp")),
+        ("v_proj/kernel", PartitionSpec("fsdp")),
+        ("q_proj/bias", PartitionSpec("fsdp")),
+        ("q_proj/kernel", PartitionSpec("fsdp")),
+        ("out_proj/kernel", PartitionSpec("fsdp")),
+        ("out_proj/bias", PartitionSpec("fsdp")),
+        ("layer_norm2/bias", PartitionSpec("fsdp")),
+        ("layer_norm2/scale", PartitionSpec("fsdp")),
+        ("position_embedding/embedding", PartitionSpec("fsdp")),
+        ("v_proj/bias", PartitionSpec("fsdp")),
+        ("fc1/bias", PartitionSpec("fsdp")),
+        ("final_layer_norm/scale", PartitionSpec("fsdp")),
+        ("k_proj/bias", PartitionSpec("fsdp")),
+        ("k_proj/kernel", PartitionSpec("fsdp")),
+        ('.*', PartitionSpec(None))
+
+    ) if fully_fsdp else (
+        ("fc2/bias", PartitionSpec("fsdp", "mp")),
+        ("layer_norm1/bias", PartitionSpec("fsdp", "mp")),
+        ("fc1/kernel", PartitionSpec("mp", "fsdp")),
+        ("final_layer_norm/bias", PartitionSpec("fsdp", "mp")),
+        ("token_embedding/embedding", PartitionSpec("fsdp", "mp")),
+        ("layer_norm1/scale", PartitionSpec("mp", "fsdp")),
+        ("fc2/kernel", PartitionSpec("mp", "fsdp")),
+        ("v_proj/kernel", PartitionSpec("fsdp", "mp")),
+        ("q_proj/bias", PartitionSpec("fsdp", "mp")),
+        ("q_proj/kernel", PartitionSpec("mp", "fsdp")),
+        ("out_proj/kernel", PartitionSpec("mp", "fsdp")),
+        ("out_proj/bias", PartitionSpec("mp", "fsdp")),
+        ("layer_norm2/bias", PartitionSpec("fsdp", "mp")),
+        ("layer_norm2/scale", PartitionSpec("fsdp", "mp")),
+        ("position_embedding/embedding", PartitionSpec("mp", "fsdp")),
+        ("v_proj/bias", PartitionSpec("mp", "fsdp")),
+        ("fc1/bias", PartitionSpec("fsdp", "mp")),
+        ("final_layer_norm/scale", PartitionSpec("mp", "fsdp")),
+        ("k_proj/bias", PartitionSpec("fsdp", "mp")),
+        ("k_proj/kernel", PartitionSpec("mp", "fsdp")),
+        ('.*', PartitionSpec(None))
+    )
