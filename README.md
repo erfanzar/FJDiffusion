@@ -61,6 +61,34 @@ To use the project, follow these steps:
 
 For more detailed usage instructions and examples, please refer to the documentation.
 
+## Getting PartitionRules
+
+here's how you can get partition rules of each model in order to use them for pjit and fsdp
+
+#### Unet2D
+
+```python
+from FJDiffusion.moonwalker.configs import Unet2DConfig
+
+partition_rules = Unet2DConfig.get_partition_rules(fully_fsdp=True)
+```
+
+#### VAE
+
+```python
+from FJDiffusion.moonwalker.configs import AutoencoderKlConfig
+
+partition_rules = AutoencoderKlConfig.get_partition_rules(fully_fsdp=True)
+```
+
+#### CLIPTextModel
+
+```python
+from FJDiffusion.moonwalker.configs import get_clip_partition_rules
+
+partition_rules = get_clip_partition_rules(fully_fsdp=True)
+```
+
 ## Contributing
 
 Contributions to this project are welcome! If you would like to contribute, please follow these steps:
@@ -80,7 +108,7 @@ the [LICENSE](https://github.com/erfanzar/FJDiffusion/blob/main/LICENSE) file fo
 
 ## Acknowledgements
 
-This project is built upon the work of only one researcher / developer. I would like to say if there's any problem 
+This project is built upon the work of only one researcher / developer. I would like to say if there's any problem
 in open-source implementations and pretrained models after final releases please let me know <3.
 
 ## Contact
