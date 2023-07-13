@@ -318,10 +318,10 @@ class FlaxEncoder(nn.Module):
 
     def __call__(self, hidden_state, deterministic: bool = True):
         hidden_state = self.conv_in(hidden_state)
-        for block in self.decoders:
+        for block in self.encoders:
             hidden_state = block(hidden_state=hidden_state, deterministic=deterministic)
         hidden_state = self.bottle_neck(hidden_states=hidden_state, deterministic=deterministic)
-        return self.conv_out(nn.swish(self.out_norm(hidden_state)))
+        return self.conv_out(nn.swish(self.norm_out(hidden_state)))
 
 
 class AutoencoderKl(nn.Module):

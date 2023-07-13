@@ -39,8 +39,8 @@ class FlaxCrossAttnDownBlock(nn.Module):
         for index in range(self.num_hidden_layers):
             in_channels = self.in_channels if index == 0 else self.out_channels
             res_n = resnet_block(
-                in_channels=in_channels,
-                out_channels=self.out_channels,
+                in_c=in_channels,
+                out_c=self.out_channels,
                 dropout_rate=self.dropout_rate,
                 epsilon=self.epsilon,
                 dtype=self.dtype,
@@ -88,6 +88,7 @@ class FlaxCrossAttnDownBlock(nn.Module):
 class FlaxDownBlock2D(nn.Module):
     in_channels: int
     out_channels: int
+    num_hidden_layers: int = 1
     dropout_rate: float = 0.0
     epsilon: float = 1e-5
     add_downsampler: bool = False
@@ -105,8 +106,8 @@ class FlaxDownBlock2D(nn.Module):
         for index in range(self.num_hidden_layers):
             in_channels = self.in_channels if index == 0 else self.out_channels
             res_n = resnet_block(
-                in_channels=in_channels,
-                out_channels=self.out_channels,
+                in_c=in_channels,
+                out_c=self.out_channels,
                 dropout_rate=self.dropout_rate,
                 epsilon=self.epsilon,
                 dtype=self.dtype,
@@ -169,8 +170,8 @@ class FlaxCrossAttnUpBlock(nn.Module):
             in_channel = self.in_channels if (index == self.num_hidden_layers - 1) else self.out_channels
             resnet_skip_in_channel = self.perv_out_channels if index == 0 else self.out_channels
             res_n = resnet_block(
-                in_channels=in_channel + resnet_skip_in_channel,
-                out_channels=self.out_channels,
+                in_c=in_channel + resnet_skip_in_channel,
+                out_c=self.out_channels,
                 dropout_rate=self.dropout_rate,
                 epsilon=self.epsilon,
                 dtype=self.dtype,
@@ -210,6 +211,9 @@ class FlaxCrossAttnUpBlock(nn.Module):
                  encoder_hidden_states: jnp.DeviceArray,
                  deterministic: bool = True
                  ):
+        if isinstance(output_states, tuple):
+            output_states = list(output_states)
+            output_states = output_states[::-1]
         for res, atn in zip(self.resnets, self.attentions):
             hidden_state = jnp.concatenate([hidden_state, output_states.pop()], axis=-1)
             hidden_state = res(hidden_state, time, deterministic=deterministic)
@@ -246,8 +250,8 @@ class FlaxUpBlock2D(nn.Module):
             in_channel = self.in_channels if (index == self.num_hidden_layers - 1) else self.out_channels
             resnet_skip_in_channel = self.perv_out_channels if index == 0 else self.out_channels
             res_n = resnet_block(
-                in_channels=in_channel + resnet_skip_in_channel,
-                out_channels=self.out_channels,
+                in_c=in_channel + resnet_skip_in_channel,
+                out_c=self.out_channels,
                 dropout_rate=self.dropout_rate,
                 epsilon=self.epsilon,
                 dtype=self.dtype,
@@ -305,8 +309,8 @@ class FlaxUNetMidBlock2DCrossAttn(nn.Module):
         )
         resnets = [
             resnet_block(
-                in_channels=self.in_channels,
-                out_channels=self.in_channels,
+                in_c=self.in_channels,
+                out_c=self.in_channels,
                 dropout_rate=self.dropout_rate,
                 epsilon=self.epsilon,
                 dtype=self.dtype,
@@ -317,7 +321,7 @@ class FlaxUNetMidBlock2DCrossAttn(nn.Module):
 
         attentions = []
 
-        for _ in range(self.num_layers):
+        for _ in range(self.num_hidden_layers):
             attn_block = attention_block(
                 num_hidden_layers=1,
                 heads_dim=self.in_channels // self.num_attention_heads,
@@ -334,8 +338,8 @@ class FlaxUNetMidBlock2DCrossAttn(nn.Module):
             attentions.append(attn_block)
 
             res_block = resnet_block(
-                in_channels=self.in_channels,
-                out_channels=self.in_channels,
+                in_c=self.in_channels,
+                out_c=self.in_channels,
                 dropout_rate=self.dropout_rate,
                 epsilon=self.epsilon,
                 dtype=self.dtype,
@@ -383,8 +387,8 @@ class FlaxUNetMidBlock2D(nn.Module):
         ) if self.gradient_checkpointing != '' else FlaxResnetBlock2DNTime
         resnets = [
             resnet_block(
-                in_channels=self.in_channels,
-                out_channels=self.in_channels,
+                in_c=self.in_channels,
+                out_c=self.in_channels,
                 dropout_rate=self.dropout_rate,
                 epsilon=self.epsilon,
                 dtype=self.dtype,
@@ -395,7 +399,7 @@ class FlaxUNetMidBlock2D(nn.Module):
 
         attentions = []
 
-        for _ in range(self.num_layers):
+        for _ in range(self.num_hidden_layers):
             attn_block = attention_block(
                 channels=self.in_channels,
                 num_attention_heads=self.num_attention_heads,
@@ -407,8 +411,8 @@ class FlaxUNetMidBlock2D(nn.Module):
             attentions.append(attn_block)
 
             res_block = resnet_block(
-                in_channels=self.in_channels,
-                out_channels=self.in_channels,
+                in_c=self.in_channels,
+                out_c=self.in_channels,
                 dropout_rate=self.dropout_rate,
                 epsilon=self.epsilon,
                 dtype=self.dtype,
@@ -426,7 +430,7 @@ class FlaxUNetMidBlock2D(nn.Module):
                  ):
         hidden_states = self.resnets[0](hidden_states)
         for attn, resnet in zip(self.attentions, self.resnets[1:]):
-            hidden_states = attn(hidden_states, deterministic=deterministic)
+            hidden_states = attn(hidden_states)
             hidden_states = resnet(hidden_states, deterministic=deterministic)
 
         return hidden_states

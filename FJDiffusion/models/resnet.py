@@ -17,8 +17,9 @@ class FlaxResnetBlock2D(nn.Module):
 
     def setup(self) -> None:
         out_c = self.out_c or self.in_c
+
         self.c1 = nn.Conv(
-            features=self.in_c,
+            features=out_c,
             kernel_size=(3, 3),
             strides=(1, 1),
             padding=((1, 1), (1, 1)),
@@ -69,9 +70,10 @@ class FlaxResnetBlock2D(nn.Module):
         residual = hidden_state
         hidden_state = self.c1(nn.swish(self.norm1(hidden_state)))
         time = jnp.expand_dims(jnp.expand_dims(self.time_emb(nn.swish(time)), 1), 1)
+        # print(f"TIME : {time.shape} | HIDDEN : {hidden_state.shape} | IN_C : {self.in_c} | OUT_C : {self.out_c}")
         hidden_state += time
         hidden_state = self.c2(self.drop(nn.swish(self.norm2(hidden_state)), deterministic=deterministic))
-        if self.cs is not None:
+        if hasattr(self, 'cs'):
             residual = self.cs(residual)
         return hidden_state + residual
 
@@ -128,6 +130,6 @@ class FlaxResnetBlock2DNTime(nn.Module):
         residual = hidden_state
         hidden_state = self.c1(nn.swish(self.norm1(hidden_state)))
         hidden_state = self.c2(self.drop(nn.swish(self.norm2(hidden_state)), deterministic=deterministic))
-        if self.cs is not None:
+        if hasattr(self, 'cs'):
             residual = self.cs(residual)
         return hidden_state + residual

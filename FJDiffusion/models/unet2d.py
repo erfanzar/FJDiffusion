@@ -104,7 +104,7 @@ class Unet2DConditionModel(nn.Module):
                     add_downsampler=not is_final_b,
                     num_hidden_layers=self.num_hidden_layers_per_block,
                     in_channels=in_channels,
-                    only_cross_attention=only_cross_atn[i],
+                    only_cross_attn=only_cross_atn[i],
                     out_channels=output_channel,
                 )
             elif name == 'DownBlock2D':
@@ -113,8 +113,8 @@ class Unet2DConditionModel(nn.Module):
                     out_channels=output_channel,
                     dropout_rate=self.dropout_rate,
                     epsilon=self.epsilon,
-                    use_linear_proj=self.use_linear_proj,
                     add_downsampler=not is_final_b,
+                    num_hidden_layers=self.num_hidden_layers_per_block,
                     dtype=self.dtype,
                     param_dtype=self.param_dtype,
                     precision=self.precision,

@@ -6,6 +6,8 @@ import jax
 from jax import numpy as jnp
 from flax import linen as nn
 
+from FJDiffusion.models.utils import get_gradient_checkpointing_policy
+
 
 class FlaxBaseAttn(nn.Module):
     query_dim: int
@@ -21,26 +23,26 @@ class FlaxBaseAttn(nn.Module):
         self.scale = self.heads_dim ** -0.5
         self.q = nn.Dense(inner_dim,
                           dtype=self.dtype,
-                          pram_dtype=self.param_dtype,
+                          param_dtype=self.param_dtype,
                           precision=self.precision,
                           kernel_init=jax.nn.initializers.normal(),
                           use_bias=False)
         self.k = nn.Dense(inner_dim,
                           dtype=self.dtype,
-                          pram_dtype=self.param_dtype,
+                          param_dtype=self.param_dtype,
                           precision=self.precision,
                           kernel_init=jax.nn.initializers.normal(),
                           use_bias=False)
         self.v = nn.Dense(inner_dim,
                           dtype=self.dtype,
-                          pram_dtype=self.param_dtype,
+                          param_dtype=self.param_dtype,
                           precision=self.precision,
                           kernel_init=jax.nn.initializers.normal(),
                           use_bias=False)
         self.o = nn.Dense(
             self.query_dim,
             dtype=self.dtype,
-            pram_dtype=self.param_dtype,
+            param_dtype=self.param_dtype,
             precision=self.precision,
             kernel_init=jax.nn.initializers.normal(),
         )
@@ -50,7 +52,7 @@ class FlaxBaseAttn(nn.Module):
         batch, sq, hidden_size = x.shape
         x = x.reshape(batch, sq, self.num_attention_heads, hidden_size // self.num_attention_heads)
         x = jnp.transpose(x, (0, 2, 1, 3))
-        return x.reshape(batch * self.num_attention_heads, sq, hidden_size * self.num_attention_heads)
+        return x.reshape(batch * self.num_attention_heads, sq, hidden_size // self.num_attention_heads)
 
     def merge(self, x: jnp.DeviceArray):
         batch, sq, hidden_size = x.shape
@@ -131,7 +133,7 @@ class FlaxEncoderBaseTransformerBlock(nn.Module):
         self.attn_1 = FlaxBaseAttn(
             self.features,
             num_attention_heads=self.num_attention_heads,
-            dim_head=self.heads_dim,
+            heads_dim=self.heads_dim,
             dropout_rate=self.dropout_rate,
             dtype=self.dtype,
             param_dtype=self.param_dtype,
@@ -141,7 +143,7 @@ class FlaxEncoderBaseTransformerBlock(nn.Module):
             self.features,
             num_attention_heads=self.num_attention_heads,
             dropout_rate=self.dropout_rate,
-            dim_head=self.heads_dim,
+            heads_dim=self.heads_dim,
             dtype=self.dtype,
             param_dtype=self.param_dtype,
             precision=self.precision
@@ -249,6 +251,7 @@ class FlaxTransformerBlock2D(nn.Module):
             )
         else:
             self.proj_in = nn.Conv(
+                features,
                 kernel_size=(1, 1),
                 strides=(1, 1),
                 padding='VALID',
@@ -275,6 +278,7 @@ class FlaxTransformerBlock2D(nn.Module):
             )
         else:
             self.proj_out = nn.Conv(
+                features,
                 kernel_size=(1, 1),
                 strides=(1, 1),
                 padding='VALID',

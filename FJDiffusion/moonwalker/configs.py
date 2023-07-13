@@ -6,8 +6,8 @@ import jax
 
 class AutoencoderKlConfig(PretrainedConfig):
     def __init__(self,
-                 in_channels: int,
-                 out_channels: int,
+                 in_channels: int = 3,
+                 out_channels: int = 3,
                  dropout_rate: float = 0.0,
                  epsilon: float = 1e-5,
                  down_block_types: Tuple[str] = ("DownEncoderBlock2D",),
@@ -18,9 +18,6 @@ class AutoencoderKlConfig(PretrainedConfig):
                  act_fn: str = "silu",
                  latent_channels: int = 4,
                  gradient_checkpointing: str = 'nothing_saveable',
-                 dtype: jnp.dtype = jnp.float32,
-                 param_dtype: jnp.dtype = jnp.float32,
-                 precision: Optional[Union[None, jax.lax.Precision]] = jax.lax.Precision('fastest'),
                  **kwargs
                  ):
         super().__init__()
@@ -36,12 +33,11 @@ class AutoencoderKlConfig(PretrainedConfig):
         self.act_fn = act_fn
         self.latent_channels = latent_channels
         self.gradient_checkpointing = gradient_checkpointing
-        self.dtype = dtype
-        self.param_dtype = param_dtype
-        self.precision = precision
         self.__dict__.update(**kwargs)
 
-    def get_config_to_init(self):
+    def get_config_to_init(self, dtype: jnp.dtype = jnp.float32,
+                           param_dtype: jnp.dtype = jnp.float32,
+                           precision: Optional[Union[None, jax.lax.Precision]] = None):
         return {
             "in_channels": self.in_channels,
             "out_channels": self.out_channels,
@@ -55,9 +51,9 @@ class AutoencoderKlConfig(PretrainedConfig):
             "act_fn": self.act_fn,
             "latent_channels": self.latent_channels,
             "gradient_checkpointing": self.gradient_checkpointing,
-            "dtype": self.dtype,
-            "param_dtype": self.param_dtype,
-            "precision": self.precision
+            "dtype": dtype,
+            "param_dtype": param_dtype,
+            "precision": precision
         }
 
 
@@ -66,16 +62,16 @@ class Unet2DConfig(PretrainedConfig):
                  hidden_size: int = 256,
                  in_channels: int = 4,
                  out_channels: int = 4,
-                 down_block_types: Tuple[str] = (
+                 down_block_types: Tuple[str, ...] = (
                          "CrossAttnDownBlock2D", "CrossAttnDownBlock2D", "CrossAttnDownBlock2D", "CrossAttnDownBlock2D",
                          "DownBlock2D"
                  ),
-                 up_block_types: Tuple[str] = (
+                 up_block_types: Tuple[str, ...] = (
                          "UpBlock2D", "CrossAttnUpBlock2D", "CrossAttnUpBlock2D", "CrossAttnUpBlock2D",
                          "CrossAttnUpBlock2D"
                  ),
                  only_cross_attention: Union[bool, Tuple[bool]] = False,
-                 block_out_channels: Tuple[int] = (320, 640, 640, 1280, 1280),
+                 block_out_channels: Tuple[int, ...] = (320, 640, 640, 1280, 1280),
                  num_hidden_layers_per_block: int = 2,
                  dropout_rate: float = 0.0,
                  use_linear_proj: bool = False,
@@ -84,9 +80,6 @@ class Unet2DConfig(PretrainedConfig):
                  cross_attention_dim: int = 1280,
                  freq_shift: int = 0,
                  gradient_checkpointing: str = 'nothing_saveable',
-                 dtype: jnp.dtype = jnp.float32,
-                 param_dtype: jnp.dtype = jnp.float32,
-                 precision: Optional[Union[None, jax.lax.Precision]] = None,
                  epsilon: float = 1e-5,
                  **kwargs
                  ):
@@ -107,12 +100,11 @@ class Unet2DConfig(PretrainedConfig):
         self.cross_attention_dim = cross_attention_dim
         self.hidden_size = hidden_size
         self.gradient_checkpointing = gradient_checkpointing
-        self.dtype = dtype
-        self.param_dtype = param_dtype
-        self.precision = precision
         self.__dict__.update(**kwargs)
 
-    def get_config_to_init(self):
+    def get_config_to_init(self, dtype: jnp.dtype = jnp.float32,
+                           param_dtype: jnp.dtype = jnp.float32,
+                           precision: Optional[Union[None, jax.lax.Precision]] = None):
         return {
             "in_channels": self.in_channels,
             "out_channels": self.out_channels,
@@ -130,7 +122,7 @@ class Unet2DConfig(PretrainedConfig):
             "cross_attention_dim": self.cross_attention_dim,
             "hidden_size": self.hidden_size,
             "gradient_checkpointing": self.gradient_checkpointing,
-            "dtype": self.dtype,
-            "param_dtype": self.param_dtype,
-            "precision": self.precision
+            "dtype": dtype,
+            "param_dtype": param_dtype,
+            "precision": precision
         }

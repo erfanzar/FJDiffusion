@@ -92,7 +92,7 @@ class Upsample(nn.Module):
             padding=((1, 1), (1, 1)),
             dtype=self.dtype,
             param_dtype=self.param_dtype,
-            precision=self.precsion
+            precision=self.precision
         )
 
     def __call__(self, hidden_states):
