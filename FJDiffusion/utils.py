@@ -1,5 +1,6 @@
 import jax.numpy as jnp
 import numpy as np
+from typing import Callable
 
 
 def pre_compute_time_embeddings(time_step, base: int = 10000, dim: int = 128, dtype: jnp.dtype = jnp.float32):
@@ -28,3 +29,30 @@ def preprocess_image(x):
 
 def past_process_image(x):
     return np.asarray(((x + 1) / 2) * 255, dtype=np.uint8)
+
+
+class BaseClass:
+    def __repr__(self):
+        string = f'{self.__class__.__name__}('
+        for k, v in self.__dict__.items():
+            if isinstance(v, Callable):
+                def string_func(it_self):
+
+                    string_ = f'{it_self.__class__.__name__}(\n'
+                    for k_, v_ in it_self.__dict__.items():
+                        string_ += f'\t\t{k_} : {v_}\n'
+                    string_ += '\t)'
+                    return string_
+
+                try:
+                    v.__str__ = string_func
+                    v = v.__str__(v)
+                except RuntimeError:
+                    pass
+
+            string += f'\n\t{k} : {v}'
+        string += ')'
+        return string
+
+    def __str__(self):
+        return self.__repr__()
