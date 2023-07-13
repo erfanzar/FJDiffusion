@@ -1,6 +1,17 @@
+import copy
+import json
+
 import jax.numpy as jnp
 import numpy as np
 from typing import Callable
+
+jax_supported_dtypes = {
+    'float64': jnp.float64,
+    'float32': jnp.float32,
+    'float16': jnp.float16,
+    'bfloat16': jnp.bfloat16,
+    'complex64': jnp.complex64
+}
 
 
 def pre_compute_time_embeddings(time_step, base: int = 10000, dim: int = 128, dtype: jnp.dtype = jnp.float32):
@@ -33,26 +44,24 @@ def past_process_image(x):
 
 class BaseClass:
     def __repr__(self):
-        string = f'{self.__class__.__name__}('
-        for k, v in self.__dict__.items():
-            if isinstance(v, Callable):
-                def string_func(it_self):
-
-                    string_ = f'{it_self.__class__.__name__}(\n'
-                    for k_, v_ in it_self.__dict__.items():
-                        string_ += f'\t\t{k_} : {v_}\n'
-                    string_ += '\t)'
-                    return string_
-
-                try:
-                    v.__str__ = string_func
-                    v = v.__str__(v)
-                except RuntimeError:
-                    pass
-
-            string += f'\n\t{k} : {v}'
-        string += ')'
-        return string
+        return f'{self.__class__.__name__} {self.to_json()}'
 
     def __str__(self):
         return self.__repr__()
+
+    def to_json(self):
+        new_dict = {}
+        for key, val in self.__dict__.items():
+            if not isinstance(val, (list, tuple, int, float, dict, str)) or val is None:
+                new_dict[key] = val.__repr__()
+            else:
+                if isinstance(val, (list, tuple)):
+                    new_dict[key] = val if len(val) < 8 else str(val[:4]) + '...'
+                else:
+                    new_dict[key] = val
+        jsn = json.dumps(
+            new_dict,
+            indent=2,
+            sort_keys=True
+        )
+        return jsn
