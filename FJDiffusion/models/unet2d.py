@@ -16,7 +16,7 @@ class OutputType(BaseOutput):
 
 
 class Unet2DConditionModel(nn.Module):
-    hidden_size: int = 32
+    sample_size: int = 32
     in_channels: int = 4
     out_channels: int = 4
 
@@ -47,7 +47,7 @@ class Unet2DConditionModel(nn.Module):
 
     def init_weights(self, rng: jax.random.KeyArray):
 
-        sample = jnp.zeros((1, self.in_channels, self.hidden_size, self.hidden_size), dtype=self.dtype)
+        sample = jnp.zeros((1, self.in_channels, self.sample_size, self.sample_size), dtype=self.dtype)
         timesteps = jnp.ones((1,), dtype=jnp.int32)
         encoder_hidden_states = jnp.zeros((1, 1, self.cross_attention_dim), dtype=self.dtype)
 

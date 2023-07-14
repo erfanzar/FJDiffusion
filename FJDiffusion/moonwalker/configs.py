@@ -15,7 +15,7 @@ class AutoencoderKlConfig(PretrainedConfig):
                  up_block_types: Tuple[str] = ("UpDecoderBlock2D",),
                  block_out_channels: Tuple[int] = (64,),
                  num_hidden_layers_per_block: int = 2,
-                 hidden_size: int = 256,
+                 sample_size: int = 256,
                  act_fn: str = "silu",
                  latent_channels: int = 4,
                  gradient_checkpointing: str = 'nothing_saveable',
@@ -30,7 +30,7 @@ class AutoencoderKlConfig(PretrainedConfig):
         self.up_block_types = up_block_types
         self.block_out_channels = block_out_channels
         self.num_hidden_layers_per_block = num_hidden_layers_per_block
-        self.hidden_size = hidden_size
+        self.sample_size = sample_size
         self.act_fn = act_fn
         self.latent_channels = latent_channels
         self.gradient_checkpointing = gradient_checkpointing
@@ -48,7 +48,7 @@ class AutoencoderKlConfig(PretrainedConfig):
             "up_block_types": self.up_block_types,
             "block_out_channels": self.block_out_channels,
             "num_hidden_layers_per_block": self.num_hidden_layers_per_block,
-            "hidden_size": self.hidden_size,
+            "sample_size": self.sample_size,
             "act_fn": self.act_fn,
             "latent_channels": self.latent_channels,
             "gradient_checkpointing": self.gradient_checkpointing,
@@ -123,7 +123,7 @@ class AutoencoderKlConfig(PretrainedConfig):
 
 class Unet2DConfig(PretrainedConfig):
     def __init__(self,
-                 hidden_size: int = 256,
+                 sample_size: int = 256,
                  in_channels: int = 4,
                  out_channels: int = 4,
                  down_block_types: Tuple[str, ...] = (
@@ -162,7 +162,7 @@ class Unet2DConfig(PretrainedConfig):
         self.use_linear_proj = use_linear_proj
         self.freq_shift = freq_shift
         self.cross_attention_dim = cross_attention_dim
-        self.hidden_size = hidden_size
+        self.sample_size = sample_size
         self.gradient_checkpointing = gradient_checkpointing
         self.__dict__.update(**kwargs)
 
@@ -184,7 +184,7 @@ class Unet2DConfig(PretrainedConfig):
             "use_linear_proj": self.use_linear_proj,
             "freq_shift": self.freq_shift,
             "cross_attention_dim": self.cross_attention_dim,
-            "hidden_size": self.hidden_size,
+            "sample_size": self.sample_size,
             "gradient_checkpointing": self.gradient_checkpointing,
             "dtype": dtype,
             "param_dtype": param_dtype,
