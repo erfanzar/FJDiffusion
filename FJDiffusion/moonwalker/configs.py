@@ -140,7 +140,7 @@ class Unet2DConfig(PretrainedConfig):
                  dropout_rate: float = 0.0,
                  use_linear_proj: bool = False,
                  flip_sin_to_cos: bool = True,
-                 num_attention_heads: Optional[Union[int, Tuple[int]]] = None,
+                 num_attention_heads: Union[int, Tuple[int]] = 8,
                  cross_attention_dim: int = 1280,
                  freq_shift: int = 0,
                  gradient_checkpointing: str = 'nothing_saveable',
