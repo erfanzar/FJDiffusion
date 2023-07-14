@@ -60,21 +60,27 @@ class AutoencoderKlConfig(PretrainedConfig):
     @staticmethod
     def get_partition_rules():
         return (
-            ("query/(kernel|bias)", PartitionSpec("fsdp")),
-            ("c1/(bias|kernel)",  PartitionSpec("dp", None, "fsdp")),
-            ("value/(bias|kernel)", PartitionSpec("fsdp")),
-            ("post_quant_conv/(bias|kernel)",  PartitionSpec("dp", None, "fsdp")),
-            ("out_norm/(scale|bias)", PartitionSpec("fsdp")),
-            ("group_norm/(scale|bias)", PartitionSpec("fsdp")),
-            ("conv_in/(bias|kernel)",  PartitionSpec("dp", None, "fsdp")),
-            ("norm_out/(scale|bias)", PartitionSpec("fsdp")),
-            ("c2/(bias|kernel)",  PartitionSpec("dp", None, "fsdp")),
-            ("norm1/(scale|bias)", PartitionSpec("fsdp")),
-            ("key/(bias|kernel)", PartitionSpec("fsdp")),
-            ("proj_attn/(bias|kernel)", PartitionSpec("fsdp")),
-            ("conv_out/(bias|kernel)", PartitionSpec("dp", None, "fsdp")),
-            ("quant_conv/(bias|kernel)",  PartitionSpec("dp", None, "fsdp")),
-            ("norm2/(scale|bias)", PartitionSpec("fsdp")),
+            ("query/(kernel)", PartitionSpec("fsdp")),
+            ("value/(kernel)", PartitionSpec("fsdp")),
+            ("key/(kernel)", PartitionSpec("fsdp")),
+            ("proj_attn/(kernel)", PartitionSpec("fsdp")),
+
+            ("norm1/(scale)", PartitionSpec("fsdp")),
+            ("norm2/(scale)", PartitionSpec("fsdp")),
+            ("out_norm/(scale)", PartitionSpec("fsdp")),
+            ("group_norm/(scale)", PartitionSpec("fsdp")),
+            ("norm_out/(scale)", PartitionSpec("fsdp")),
+
+            ("conv_in/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
+            ("conv_out/(kernel)", PartitionSpec("dp", None, "fsdp")),
+
+            ("c2/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
+            ("c1/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
+
+            ("post_quant_conv/(kernel)", PartitionSpec("dp")),
+            ("quant_conv/(kernel)", PartitionSpec("dp")),
+
+            ('bias', PartitionSpec('dp')),
             ('.*', PartitionSpec(None))
         )
 
