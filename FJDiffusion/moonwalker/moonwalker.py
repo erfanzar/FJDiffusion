@@ -181,16 +181,15 @@ class MoonWalker(BaseClass):
             # backend=self.backend
         )
         with self.mesh:
-
-            sharded_unet_params = self.sharded_init_unet_params_func()
-            if self.debug:
-                print('UNET Parameters initialized successfully')
-            sharded_clip_params = self.sharded_init_clip_params_func()
-            if self.debug:
-                print('CLIP Parameters initialized successfully')
             sharded_vae_params = self.sharded_init_vae_params_func()
             if self.debug:
-                print('VAE Parameters initialized successfully')
+                prefix_print('VAE Parameters', 'initialized Successfully')
+            sharded_unet_params = self.sharded_init_unet_params_func()
+            if self.debug:
+                prefix_print('UNET Parameters', 'initialized Successfully')
+            sharded_clip_params = self.sharded_init_clip_params_func()
+            if self.debug:
+                prefix_print('CLIP Parameters', 'initialized Successfully')
 
         self.sharded_clip_params = sharded_clip_params
         self.sharded_vae_params = sharded_vae_params
