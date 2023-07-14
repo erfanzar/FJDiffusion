@@ -24,6 +24,8 @@ class MoonWalker(BaseClass):
             precision: Optional[Union[None, jax.lax.Precision]] = None,
             debug: Optional[bool] = False,
             clip_partition_rules: Optional[Union[None, tuple]] = None,
+            vae_partition_rules: Optional[Union[None, tuple]] = None,
+            unet_partition_rules: Optional[Union[None, tuple]] = None,
 
             mesh_shape: Tuple[int, int, int] = (1, -1, 1),
             backend: str = 'tpu'
@@ -55,8 +57,8 @@ class MoonWalker(BaseClass):
         config_unet = Unet2DConfig.from_pretrained(unet_config_or_path) if isinstance(unet_config_or_path,
                                                                                       str) else unet_config_or_path
 
-        self.vae_partition = vae_config_or_path.get_partition_rules()
-        self.unet_partition = unet_config_or_path.get_partition_rules()
+        self.vae_partition = vae_partition_rules or vae_config_or_path.get_partition_rules()
+        self.unet_partition = unet_partition_rules or unet_config_or_path.get_partition_rules()
 
         config_unet_kwargs = config_unet.get_config_to_init()
         config_vae_kwargs = config_vae.get_config_to_init()
