@@ -131,11 +131,11 @@ class FlaxResnetBlock2DNTime(nn.Module):
     def __call__(self, hidden_state, deterministic=False):
         residual = hidden_state
         hidden_state = self.c1(nn.swish(self.norm1(hidden_state)))
-        print(f"HIDDEN : {hidden_state.shape} | IN_C : {self.in_c} | OUT_C : {self.out_c}")
+        # print(f"HIDDEN : {hidden_state.shape} | IN_C : {self.in_c} | OUT_C : {self.out_c}")
         hidden_state = self.c2(self.drop(nn.swish(self.norm2(hidden_state)), deterministic=deterministic))
-        print(f"C2 : {hidden_state.shape} | CUT : {self._cut}")
+        # print(f"C2 : {hidden_state.shape} | CUT : {self._cut}")
         if hasattr(self, 'cs'):
             residual = self.cs(residual)
-        print(f"CS : {hidden_state.shape} | RESIDUAL : {residual.shape}")
-        print('*' * 15)
+        # print(f"CS : {hidden_state.shape} | RESIDUAL : {residual.shape}")
+        # print('*' * 15)
         return hidden_state + residual

@@ -88,7 +88,9 @@ class AutoencoderKlConfig(PretrainedConfig):
                 ("c2/bias", PartitionSpec("fsdp")),
                 ("norm1/scale", PartitionSpec("fsdp")),
                 ("proj_attn/bias", PartitionSpec("fsdp")),
-                ("norm2/scale", PartitionSpec("fsdp"))) if fully_fsdp \
+                ("norm2/scale", PartitionSpec("fsdp")),
+                ('.*', PartitionSpec(None))
+                ) if fully_fsdp \
             else (("query/kernel", PartitionSpec("fsdp", "mp")),
                   ("c1/bias", PartitionSpec("mp", "fsdp")),
                   ("value/bias", PartitionSpec("mp", "fsdp")),
@@ -118,7 +120,8 @@ class AutoencoderKlConfig(PretrainedConfig):
                   ("c2/bias", PartitionSpec("mp", "fsdp")),
                   ("norm1/scale", PartitionSpec("fsdp", "mp")),
                   ("proj_attn/bias", PartitionSpec("fsdp", "mp")),
-                  ("norm2/scale", PartitionSpec("mp", "fsdp")))
+                  ("norm2/scale", PartitionSpec("mp", "fsdp")),
+                  ('.*', PartitionSpec(None)))
 
 
 class Unet2DConfig(PretrainedConfig):
