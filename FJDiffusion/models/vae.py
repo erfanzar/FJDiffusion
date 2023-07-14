@@ -219,12 +219,13 @@ class FlaxDecoder(nn.Module):
                                    self.gradient_checkpointing)) \
             if self.gradient_checkpointing != '' else FlaxUpDecoderBlock2D
 
-        reversed_block_out_channels = list(self.block_out_channels[::-1])
+        reversed_block_out_channels = list(self.block_out_channels)[::-1]
         output_channel = reversed_block_out_channels[0]
         for i, name in enumerate(self.up_block_types):
             is_final_b = i == len(self.up_block_types) - 1
             prev_output_channel = output_channel
             output_channel = reversed_block_out_channels[i]
+            print(f'Decoder Layer TO INIT = in {prev_output_channel} | out {output_channel}')
             block = block_class(
                 in_channels=prev_output_channel,
                 out_channels=output_channel,
@@ -293,6 +294,7 @@ class FlaxEncoder(nn.Module):
             in_c = out_c
             out_c = self.block_out_channels[i]
             is_final_b = i == len(self.down_block_types) - 1
+            print(f'Decoder Layer TO INIT = in {in_c} | out {out_c}')
             block = block_class(
                 in_channels=in_c,
                 out_channels=out_c,
