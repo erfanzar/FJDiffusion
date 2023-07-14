@@ -100,7 +100,7 @@ class FlaxDownEncoderBlock2D(nn.Module):
         self.resnets = resnet
         if self.add_down_sampler:
             self.down_sampler = Downsample(
-                in_channel=self.out_channels,
+                in_channels=self.out_channels,
                 dtype=self.dtype,
                 param_dtype=self.param_dtype,
                 precision=self.precision
@@ -151,7 +151,7 @@ class FlaxUpDecoderBlock2D(nn.Module):
         self.resnets = resnet
         if self.add_up_sampler:
             self.up_sampler = Upsample(
-                in_channel=self.out_channels,
+                in_channels=self.out_channels,
                 dtype=self.dtype,
                 param_dtype=self.param_dtype,
                 precision=self.precision
