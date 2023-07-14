@@ -264,7 +264,7 @@ class FlaxEncoder(nn.Module):
 
     def setup(self) -> None:
         self.conv_in = nn.Conv(
-            self.block_out_channels[-1],
+            self.block_out_channels[0],
             kernel_size=(3, 3),
             strides=(1, 1),
             padding=((1, 1), (1, 1)),
@@ -285,7 +285,6 @@ class FlaxEncoder(nn.Module):
             32, epsilon=self.epsilon
         )
         encoders = []
-        self.block_out_channels = self.block_out_channels[::-1]
         out_c = self.block_out_channels[0]
         block_class = nn.remat(FlaxDownEncoderBlock2D,
                                policy=get_gradient_checkpointing_policy(
