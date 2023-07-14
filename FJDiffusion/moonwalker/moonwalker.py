@@ -95,13 +95,6 @@ class MoonWalker(BaseClass):
         self.sharded_init_clip_params_func = None
         self.sharded_init_vae_params_func = None
 
-        self.sharded_clip_params = RuntimeError(
-            'You have to init the parameters with using MoonWalker.do_init function before calling clip_params')
-        self.sharded_vae_params = RuntimeError(
-            'You have to init the parameters with using MoonWalker.do_init function before calling vae_params')
-        self.sharded_unet_params = RuntimeError(
-            'You have to init the parameters with using MoonWalker.do_init function before calling unet_params')
-
         self.clip_params = RuntimeError(
             'You have to init the parameters with using MoonWalker.do_init function before calling clip_params')
         self.vae_params = RuntimeError(
@@ -192,9 +185,6 @@ class MoonWalker(BaseClass):
             if self.debug:
                 prefix_print('CLIP Parameters', 'initialized Successfully')
 
-        self.sharded_clip_params = sharded_clip_params
-        self.sharded_vae_params = sharded_vae_params
-        self.sharded_unet_params = sharded_unet_params
         self.clip_params = sharded_clip_params
         self.vae_params = sharded_vae_params
         self.unet_params = sharded_unet_params
