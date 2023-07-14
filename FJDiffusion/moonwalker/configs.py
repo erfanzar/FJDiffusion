@@ -58,26 +58,8 @@ class AutoencoderKlConfig(PretrainedConfig):
         }
 
     @staticmethod
-    def get_partition_rules(fully_fsdp: bool = True):
+    def get_partition_rules():
         return (
-            ("query/(kernel|bias)", PartitionSpec("dp")),
-            ("c1/(bias|kernel)", PartitionSpec("dp")),
-            ("value/(bias|kernel)", PartitionSpec("dp")),
-            ("post_quant_conv/(bias|kernel)", PartitionSpec("dp")),
-            ("out_norm/(scale|bias)", PartitionSpec("dp")),
-            ("group_norm/(scale|bias)", PartitionSpec("dp")),
-            ("conv_in/(bias|kernel)", PartitionSpec("dp")),
-            ("norm_out/(scale|bias)", PartitionSpec("dp")),
-            ("c2/(bias|kernel)", PartitionSpec("dp")),
-            ("norm1/(scale|bias)", PartitionSpec("dp")),
-            ("key/(bias|kernel)", PartitionSpec("dp")),
-            ("proj_attn/(bias|kernel)", PartitionSpec("dp")),
-            ("conv_out/(bias|kernel)", PartitionSpec("dp")),
-            ("quant_conv/(bias|kernel)", PartitionSpec("dp")),
-            ("norm2/(scale|bias)", PartitionSpec("dp")),
-            ('.*', PartitionSpec(None))
-        ) if fully_fsdp \
-            else (
             ("query/(kernel|bias)", PartitionSpec("dp")),
             ("c1/(bias|kernel)", PartitionSpec("dp")),
             ("value/(bias|kernel)", PartitionSpec("dp")),
@@ -168,30 +150,8 @@ class Unet2DConfig(PretrainedConfig):
         }
 
     @staticmethod
-    def get_partition_rules(fully_fsdp: bool = True):
+    def get_partition_rules():
         return (
-            ("v/(kernel|bias)", PartitionSpec("dp")),
-            ("q/(kernel|bias)", PartitionSpec("dp")),
-            ("o/(kernel|bias)", PartitionSpec("dp")),
-            ("k/(kernel|bias)", PartitionSpec("dp")),
-            ("norm_out/(scale|bias)", PartitionSpec("dp")),
-            ("time_emb/(kernel|bias)", PartitionSpec("dp")),
-            ("conv_out/(kernel|bias)", PartitionSpec("dp")),
-            ("proj/(kernel|bias)", PartitionSpec("dp")),
-            ("c2/(kernel|bias)", PartitionSpec("dp")),
-            ("l2/(kernel|bias)", PartitionSpec("dp")),
-            ("proj_in/(kernel|bias)", PartitionSpec("dp")),
-            ("cs/(kernel|bias)", PartitionSpec("dp")),
-            ("c1/(kernel|bias)", PartitionSpec("dp")),
-            ("net_2/(scale|bias)", PartitionSpec("dp")),
-            ("norm2/(scale|bias)", PartitionSpec("dp")),
-            ("conv_in/(kernel|bias)", PartitionSpec("dp")),
-            ("norm1/(scale|bias)", PartitionSpec("dp")),
-            ("norm3/(scale|bias)", PartitionSpec("dp")),
-            ("l1/(kernel|bias)", PartitionSpec("dp")),
-            ("conv/(kernel|bias)", PartitionSpec("dp")),
-            ('.*', PartitionSpec(None))
-        ) if fully_fsdp else (
             ("v/(kernel|bias)", PartitionSpec("dp")),
             ("q/(kernel|bias)", PartitionSpec("dp")),
             ("o/(kernel|bias)", PartitionSpec("dp")),
@@ -216,7 +176,7 @@ class Unet2DConfig(PretrainedConfig):
         )
 
 
-def get_clip_partition_rules(fully_fsdp: bool = True):
+def get_clip_partition_rules():
     return (
         ("token_embedding/embedding", PartitionSpec('mp', 'dp')),
         ("layer_norm1/(scale|bias)", PartitionSpec("dp")),
@@ -231,17 +191,4 @@ def get_clip_partition_rules(fully_fsdp: bool = True):
         ("k_proj/(kernel|bias)", PartitionSpec("dp")),
         ('.*', PartitionSpec(None))
 
-    ) if fully_fsdp else (
-        ("token_embedding/embedding", PartitionSpec('mp', 'dp')),
-        ("layer_norm1/(scale|bias)", PartitionSpec('mp', "dp")),
-        ("fc2/(kernel|bias)", PartitionSpec("dp", "mp")),
-        ("v_proj/(kernel|bias)", PartitionSpec("dp", "mp")),
-        ("q_proj/(kernel|bias)", PartitionSpec('mp', "dp")),
-        ("out_proj/(kernel|bias)", PartitionSpec('mp', "dp")),
-        ("layer_norm2/(scale|bias)", PartitionSpec('mp', "dp")),
-        ("position_embedding/embedding", PartitionSpec('mp', 'dp')),
-        ("fc1/(kernel|bias)", PartitionSpec("dp", "mp")),
-        ("final_layer_norm/(scale|bias)", PartitionSpec("dp", "mp")),
-        ("k_proj/(kernel|bias)", PartitionSpec('mp', "dp")),
-        ('.*', PartitionSpec(None))
     )

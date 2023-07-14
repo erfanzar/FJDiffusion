@@ -24,7 +24,7 @@ class MoonWalker(BaseClass):
             precision: Optional[Union[None, jax.lax.Precision]] = None,
             debug: Optional[bool] = False,
             clip_partition_rules: Optional[Union[None, tuple]] = None,
-            fully_fsdp: bool = True,
+
             mesh_shape: Tuple[int, int, int] = (-1, 1),
             backend: str = 'tpu'
     ):
@@ -40,7 +40,7 @@ class MoonWalker(BaseClass):
             prefix_print('Number OF Total CPUs', f'{len(jax.devices(backend))} CPUs')
         else:
             raise ValueError(f"{backend} is not recognized")
-        self.fully_fsdp = fully_fsdp
+
         self.mesh_shape = mesh_shape
         self.debug = debug
         self.backend = backend
@@ -55,8 +55,8 @@ class MoonWalker(BaseClass):
         config_unet = Unet2DConfig.from_pretrained(unet_config_or_path) if isinstance(unet_config_or_path,
                                                                                       str) else unet_config_or_path
 
-        self.vae_partition = vae_config_or_path.get_partition_rules(fully_fsdp)
-        self.unet_partition = unet_config_or_path.get_partition_rules(fully_fsdp)
+        self.vae_partition = vae_config_or_path.get_partition_rules()
+        self.unet_partition = unet_config_or_path.get_partition_rules()
 
         config_unet_kwargs = config_unet.get_config_to_init()
         config_vae_kwargs = config_vae.get_config_to_init()
@@ -124,7 +124,7 @@ class MoonWalker(BaseClass):
     def do_init(self, rng: jax.random.PRNGKey):
         clip_rng, unet_rng, vae_rng = jax.random.split(rng, 3)
         clip_partition = self.clip_partition_rules if self.clip_partition_rules is not None else \
-            get_clip_partition_rules(self.fully_fsdp)
+            get_clip_partition_rules()
         vae_partition = self.vae_partition
         unet_partition = self.unet_partition
 
@@ -179,14 +179,14 @@ class MoonWalker(BaseClass):
             # backend=self.backend
         )
         with self.mesh:
-            sharded_clip_params = self.sharded_init_clip_params_func()
 
+            sharded_unet_params = self.sharded_init_unet_params_func()
+            if self.debug:
+                print('UNET Parameters initialized successfully')
+            sharded_clip_params = self.sharded_init_clip_params_func()
             if self.debug:
                 print('CLIP Parameters initialized successfully')
             sharded_vae_params = self.sharded_init_vae_params_func()
-            if self.debug:
-                print('VAE Parameters initialized successfully')
-            sharded_unet_params = self.sharded_init_unet_params_func()
             if self.debug:
                 print('VAE Parameters initialized successfully')
 
