@@ -53,8 +53,11 @@ class BaseClass:
     def to_json(self):
         new_dict = {}
         for key, val in self.__dict__.items():
-            if not isinstance(val, (list, tuple, int, float, dict, str)) or val is None:
-                new_dict[key] = val.__repr__()
+            if not isinstance(val, (list, tuple, int, float, dict, str)):
+                try:
+                    new_dict[key] = val.__class__.__name__
+                except:
+                    new_dict[key] = 'UnCatchAble'
             else:
                 if isinstance(val, (list, tuple)):
                     new_dict[key] = val if len(val) < 8 else str(val[:4]) + '...'
