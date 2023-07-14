@@ -9,7 +9,7 @@ from jax.experimental.mesh_utils import create_device_mesh
 from jax.sharding import Mesh
 from jax.experimental.pjit import pjit
 from fjutils.easylm import match_partition_rules
-from FJDiffusion.utils import BaseClass
+from FJDiffusion.utils import BaseClass, prefix_print
 
 
 class MoonWalker(BaseClass):
@@ -25,10 +25,21 @@ class MoonWalker(BaseClass):
             debug: Optional[bool] = False,
             clip_partition_rules: Optional[Union[None, tuple]] = None,
             fully_fsdp: bool = True,
-            mesh_shape: Tuple[int, int, int] = (1, 1, -1, 1),
+            mesh_shape: Tuple[int, int, int] = (-1, 1),
             backend: str = 'tpu'
     ):
-
+        assert backend in ['cpu', 'tpu', 'gpu'], f'{backend} is not recognized available backends are cpu ,gpu and tpu'
+        if backend == 'tpu':
+            prefix_print('Number OF Local TPUs', f'{jax.local_device_count(backend)} TPUs')
+            prefix_print('Number OF Total TPUs', f'{len(jax.devices(backend))} TPUs')
+        elif backend == 'gpu':
+            prefix_print('Number OF Local GPUs', f'{jax.local_device_count(backend)} GPUs')
+            prefix_print('Number OF Total GPUs', f'{len(jax.devices(backend))} GPUs')
+        elif backend == 'cpu':
+            prefix_print('Number OF Local CPUs', f'{jax.local_device_count(backend)} CPUs')
+            prefix_print('Number OF Total CPUs', f'{len(jax.devices(backend))} CPUs')
+        else:
+            raise ValueError(f"{backend} is not recognized")
         self.fully_fsdp = fully_fsdp
         self.mesh_shape = mesh_shape
         self.debug = debug
@@ -98,7 +109,7 @@ class MoonWalker(BaseClass):
 
     @classmethod
     def naming_mesh(cls):
-        return 'dp', 'ddp', 'fsdp', 'mp',
+        return 'dp', 'mp',
 
     def create_mesh(self):
 

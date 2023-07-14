@@ -1,6 +1,7 @@
 import copy
 import json
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 from typing import Callable
@@ -65,3 +66,8 @@ class BaseClass:
             sort_keys=True
         )
         return jsn
+
+
+def prefix_print(prefix, string):
+
+    print(f"\033[1;33m{prefix}\033[1;0m : {string}")
