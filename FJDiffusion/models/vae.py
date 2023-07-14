@@ -333,7 +333,7 @@ class AutoencoderKl(nn.Module):
     up_block_types: Tuple[str] = ("UpDecoderBlock2D",)
     block_out_channels: Tuple[int] = (64,)
     num_hidden_layers_per_block: int = 2
-    hidden_size: int = 32
+    sample_size: int = 32
     act_fn: str = "silu"
     latent_channels: int = 4
     gradient_checkpointing: str = 'nothing_saveable'
@@ -390,7 +390,7 @@ class AutoencoderKl(nn.Module):
         )
 
     def init_weights(self, rng: jax.random.KeyArray):
-        sample_shape = (1, self.in_channels, self.hidden_size, self.hidden_size)
+        sample_shape = (1, self.in_channels, self.sample_size, self.sample_size)
         sample = jnp.zeros(sample_shape, dtype=jnp.float32)
 
         params_rng, dropout_rng, gaussian_rng = jax.random.split(rng, 3)
