@@ -85,6 +85,7 @@ class Unet2DConditionModel(nn.Module):
             )
         if isinstance(num_attention_heads, int):
             num_attention_heads = [num_attention_heads] * len(self.down_block_types)
+        print(num_attention_heads)
         output_channel = self.block_out_channels[0]
         down_blocks = []
         for i, name in enumerate(self.down_block_types):
