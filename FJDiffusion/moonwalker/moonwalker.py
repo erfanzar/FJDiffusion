@@ -25,7 +25,7 @@ class MoonWalker(BaseClass):
             debug: Optional[bool] = False,
             clip_partition_rules: Optional[Union[None, tuple]] = None,
             fully_fsdp: bool = True,
-            mesh_shape: Tuple[int, int, int] = (1, -1, 1),
+            mesh_shape: Tuple[int, int, int] = (1, 1, -1, 1),
             backend: str = 'tpu'
     ):
 
@@ -98,7 +98,7 @@ class MoonWalker(BaseClass):
 
     @classmethod
     def naming_mesh(cls):
-        return 'dp', 'fsdp', 'mp',
+        return 'dp', 'ddp', 'fsdp', 'mp',
 
     def create_mesh(self):
 
