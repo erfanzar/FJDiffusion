@@ -25,7 +25,7 @@ class MoonWalker(BaseClass):
             debug: Optional[bool] = False,
             clip_partition_rules: Optional[Union[None, tuple]] = None,
 
-            mesh_shape: Tuple[int, int, int] = (-1, 1),
+            mesh_shape: Tuple[int, int, int] = (1, -1, 1),
             backend: str = 'tpu'
     ):
         assert backend in ['cpu', 'tpu', 'gpu'], f'{backend} is not recognized available backends are cpu ,gpu and tpu'
@@ -109,7 +109,7 @@ class MoonWalker(BaseClass):
 
     @classmethod
     def naming_mesh(cls):
-        return 'dp', 'mp',
+        return 'dp', 'fsdp', 'mp',
 
     def create_mesh(self):
 

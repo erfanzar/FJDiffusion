@@ -70,4 +70,4 @@ class BaseClass:
 
 def prefix_print(prefix, string):
 
-    print(f"\033[1;33m{prefix}\033[1;0m : {string}")
+    print(f"\033[1;32m{prefix}\033[1;0m : {string}")
