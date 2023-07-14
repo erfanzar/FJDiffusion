@@ -70,11 +70,14 @@ class FlaxResnetBlock2D(nn.Module):
         residual = hidden_state
         hidden_state = self.c1(nn.swish(self.norm1(hidden_state)))
         time = jnp.expand_dims(jnp.expand_dims(self.time_emb(nn.swish(time)), 1), 1)
-        # print(f"TIME : {time.shape} | HIDDEN : {hidden_state.shape} | IN_C : {self.in_c} | OUT_C : {self.out_c}")
+        print(f"TIME : {time.shape} | HIDDEN : {hidden_state.shape} | IN_C : {self.in_c} | OUT_C : {self.out_c}")
         hidden_state += time
         hidden_state = self.c2(self.drop(nn.swish(self.norm2(hidden_state)), deterministic=deterministic))
+        print(f"C2 : {hidden_state.shape}")
         if hasattr(self, 'cs'):
             residual = self.cs(residual)
+        print(f"CS : {hidden_state.shape} | RESIDUAL : {residual.shape}")
+        print('*' * 15)
         return hidden_state + residual
 
 
