@@ -192,7 +192,7 @@ def get_clip_partition_rules():
         ("q_proj/(kernel|bias)", PartitionSpec("fsdp")),
         ("out_proj/(kernel|bias)", PartitionSpec("fsdp")),
         ("layer_norm2/(scale|bias)", PartitionSpec("fsdp")),
-        ("position_embedding/embedding", PartitionSpec("mp", 'fsdp')),
+        ("position_embedding/embedding", PartitionSpec("dp", 'fsdp')),
         ("fc1/(kernel|bias)", PartitionSpec("fsdp")),
         ("final_layer_norm/(scale|bias)", PartitionSpec("fsdp")),
         ("k_proj/(kernel|bias)", PartitionSpec("fsdp")),

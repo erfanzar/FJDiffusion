@@ -190,11 +190,11 @@ class MoonWalker(BaseClass):
         self.unet_params = sharded_unet_params
         if self.debug:
             clip_prm_size = sum(
-                i.size for i in jax.tree_util.tree_flatten(flax.core.unfreeze(self.sharded_clip_params))[0]) / 1e6
+                i.size for i in jax.tree_util.tree_flatten(flax.core.unfreeze(sharded_clip_params))[0]) / 1e6
             vae_prm_size = sum(
-                i.size for i in jax.tree_util.tree_flatten(flax.core.unfreeze(self.sharded_vae_params))[0]) / 1e6
+                i.size for i in jax.tree_util.tree_flatten(flax.core.unfreeze(sharded_vae_params))[0]) / 1e6
             unet_prm_size = sum(
-                i.size for i in jax.tree_util.tree_flatten(flax.core.unfreeze(self.sharded_unet_params))[0]) / 1e6
+                i.size for i in jax.tree_util.tree_flatten(flax.core.unfreeze(sharded_unet_params))[0]) / 1e6
             prefix_print('CLIP Model Parameters (Million)',
                          f"{clip_prm_size}")
             prefix_print('UNET Model Parameters (Million)',
