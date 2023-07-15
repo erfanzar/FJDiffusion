@@ -65,7 +65,7 @@ class FlaxCrossAttnDownBlock(nn.Module):
         self.attentions = attention
         self.resnets = resnet
         if self.add_downsampler:
-            self.down_sampler = Downsample(
+            self.downsamplers_0 = Downsample(
                 self.out_channels,
                 dtype=self.dtype,
                 param_dtype=self.param_dtype,
@@ -80,7 +80,7 @@ class FlaxCrossAttnDownBlock(nn.Module):
                                      deterministic=deterministic)
             output_states += (hidden_state,)
         if self.add_downsampler:
-            hidden_state = self.down_sampler(hidden_state)
+            hidden_state = self.downsamplers_0(hidden_state)
             output_states += (hidden_state,)
         return hidden_state, output_states
 
@@ -119,7 +119,7 @@ class FlaxDownBlock2D(nn.Module):
 
         self.resnets = resnet
         if self.add_downsampler:
-            self.down_sampler = Downsample(
+            self.downsamplers_0 = Downsample(
                 self.out_channels,
                 dtype=self.dtype,
                 param_dtype=self.param_dtype,
@@ -132,7 +132,7 @@ class FlaxDownBlock2D(nn.Module):
             hidden_state = resnet(hidden_state=hidden_state, time=time, deterministic=deterministic)
             output_states.append(hidden_state)
         if self.add_downsampler:
-            hidden_state = self.down_sampler(hidden_state)
+            hidden_state = self.downsamplers_0(hidden_state)
             output_states.append(hidden_state)
         return hidden_state, output_states
 

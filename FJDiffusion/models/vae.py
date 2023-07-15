@@ -99,7 +99,7 @@ class FlaxDownEncoderBlock2D(nn.Module):
 
         self.resnets = resnet
         if self.add_down_sampler:
-            self.down_sampler = Downsample(
+            self.downsamplers_0 = Downsample(
                 in_channels=self.out_channels,
                 dtype=self.dtype,
                 param_dtype=self.param_dtype,
@@ -113,7 +113,7 @@ class FlaxDownEncoderBlock2D(nn.Module):
                 deterministic=deterministic
             )
         if self.add_down_sampler:
-            hidden_state = self.down_sampler(hidden_state)
+            hidden_state = self.downsamplers_0(hidden_state)
         return hidden_state
 
 
@@ -150,7 +150,7 @@ class FlaxUpDecoderBlock2D(nn.Module):
 
         self.resnets = resnet
         if self.add_up_sampler:
-            self.up_sampler = Upsample(
+            self.upsamplers_0 = Upsample(
                 in_channels=self.out_channels,
                 dtype=self.dtype,
                 param_dtype=self.param_dtype,
@@ -164,7 +164,7 @@ class FlaxUpDecoderBlock2D(nn.Module):
                 deterministic=deterministic
             )
         if self.add_up_sampler:
-            hidden_state = self.up_sampler(hidden_state)
+            hidden_state = self.upsamplers_0(hidden_state)
         return hidden_state
 
 
