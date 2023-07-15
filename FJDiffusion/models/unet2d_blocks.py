@@ -24,8 +24,8 @@ class FlaxCrossAttnDownBlock(nn.Module):
     gradient_checkpointing: str = 'nothing_saveable'
 
     def setup(self) -> None:
-        resnet = []
-        attention = []
+        resnets = []
+        attentions = []
         resnet_block = nn.remat(FlaxResnetBlock2D,
                                 policy=get_gradient_checkpointing_policy(
                                     name=self.gradient_checkpointing)) \
@@ -60,10 +60,10 @@ class FlaxCrossAttnDownBlock(nn.Module):
                 precision=self.precision,
                 gradient_checkpointing=self.gradient_checkpointing
             )
-            attention.append(atn_n)
-            resnet.append(res_n)
-        self.attentions = attention
-        self.resnets = resnet
+            attentions.append(atn_n)
+            resnets.append(res_n)
+        self.attentions = attentions
+        self.resnets = resnets
         if self.add_downsampler:
             self.downsamplers_0 = Downsample(
                 self.out_channels,

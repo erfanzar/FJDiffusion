@@ -69,10 +69,10 @@ class Unet2DConditionModel(nn.Module):
             param_dtype=self.param_dtype,
             precision=self.precision
         )
-        self.time_o = FlaxTimesteps(
+        self.time_proj = FlaxTimesteps(
             self.block_out_channels[0], flip_sin_to_cos=self.flip_sin_to_cos, freq_shift=self.freq_shift
         )
-        self.time_e = FlaxTimestepEmbedding(
+        self.time_embedding = FlaxTimestepEmbedding(
             time_embedding_dimension,
             dtype=self.dtype,
             param_dtype=self.param_dtype,
@@ -212,7 +212,7 @@ class Unet2DConditionModel(nn.Module):
         elif isinstance(timestep, jnp.ndarray) and len(timestep.shape) == 0:
             timestep = jnp.expand_dims(timestep.astype(dtype=jnp.float32), 0)
 
-        time = self.time_e(self.time_o(timestep))
+        time = self.time_embedding(self.time_proj(timestep))
         hidden_states = self.conv_in(jnp.transpose(hidden_states, (0, 2, 3, 1)))
         down_block_res_hidden_states = [hidden_states]
         for block in self.down_blocks:

@@ -21,25 +21,25 @@ class FlaxBaseAttn(nn.Module):
     def setup(self) -> None:
         inner_dim = self.heads_dim * self.num_attention_heads
         self.scale = self.heads_dim ** -0.5
-        self.q = nn.Dense(inner_dim,
+        self.to_q = nn.Dense(inner_dim,
                           dtype=self.dtype,
                           param_dtype=self.param_dtype,
                           precision=self.precision,
                           kernel_init=jax.nn.initializers.normal(),
                           use_bias=False)
-        self.k = nn.Dense(inner_dim,
+        self.to_k = nn.Dense(inner_dim,
                           dtype=self.dtype,
                           param_dtype=self.param_dtype,
                           precision=self.precision,
                           kernel_init=jax.nn.initializers.normal(),
                           use_bias=False)
-        self.v = nn.Dense(inner_dim,
+        self.to_v = nn.Dense(inner_dim,
                           dtype=self.dtype,
                           param_dtype=self.param_dtype,
                           precision=self.precision,
                           kernel_init=jax.nn.initializers.normal(),
                           use_bias=False)
-        self.o = nn.Dense(
+        self.to_out_0 = nn.Dense(
             self.query_dim,
             dtype=self.dtype,
             param_dtype=self.param_dtype,
@@ -64,13 +64,13 @@ class FlaxBaseAttn(nn.Module):
                  context: typing.Optional[typing.Union[None, jnp.DeviceArray]] = None,
                  deterministic: bool = False):
         context = hidden_state if context is None else context
-        q = self.q(hidden_state)
-        v = self.v(context)
-        k = self.k(context)
+        q = self.to_q(hidden_state)
+        v = self.to_v(context)
+        k = self.to_k(context)
         q, k, v = self.split(q), self.split(k), self.split(v)
         attn = jax.nn.softmax(jnp.einsum('b i d,b j d-> b i j', q, k) * self.scale, axis=-1)
         attn = self.merge(jnp.einsum('b i j,b j d -> b i d', attn, v))
-        return self.dropout(self.o(attn), deterministic=deterministic)
+        return self.dropout(self.to_out_0(attn), deterministic=deterministic)
 
 
 class FlaxFeedForward(nn.Module):
@@ -130,7 +130,7 @@ class FlaxEncoderBaseTransformerBlock(nn.Module):
     precision: typing.Optional[typing.Union[None, jax.lax.Precision]] = None
 
     def setup(self) -> None:
-        self.attn_1 = FlaxBaseAttn(
+        self.attn1 = FlaxBaseAttn(
             self.features,
             num_attention_heads=self.num_attention_heads,
             heads_dim=self.heads_dim,
@@ -139,7 +139,7 @@ class FlaxEncoderBaseTransformerBlock(nn.Module):
             param_dtype=self.param_dtype,
             precision=self.precision
         )
-        self.attn_2 = FlaxBaseAttn(
+        self.attn2 = FlaxBaseAttn(
             self.features,
             num_attention_heads=self.num_attention_heads,
             dropout_rate=self.dropout_rate,
@@ -148,7 +148,7 @@ class FlaxEncoderBaseTransformerBlock(nn.Module):
             param_dtype=self.param_dtype,
             precision=self.precision
         )
-        self.ffd = FlaxFeedForward(
+        self.ff = FlaxFeedForward(
             features=self.features,
             dtype=self.dtype,
             param_dtype=self.param_dtype,
@@ -169,14 +169,14 @@ class FlaxEncoderBaseTransformerBlock(nn.Module):
     def __call__(self, hidden_state: jnp.DeviceArray, context: jnp.DeviceArray, deterministic: bool = True):
 
         if self.only_cross_attn:
-            hidden_state = self.attn_1(self.norm1(hidden_state), context=context,
-                                       deterministic=deterministic) + hidden_state
+            hidden_state = self.attn1(self.norm1(hidden_state), context=context,
+                                      deterministic=deterministic) + hidden_state
         else:
-            hidden_state = self.attn_1(self.norm1(hidden_state), context=None,
-                                       deterministic=deterministic) + hidden_state
+            hidden_state = self.attn1(self.norm1(hidden_state), context=None,
+                                      deterministic=deterministic) + hidden_state
 
-        hidden_state = self.attn_2(self.norm2(hidden_state), context, deterministic=deterministic) + hidden_state
-        hidden_state = self.ffd(self.norm3(hidden_state), deterministic=deterministic) + hidden_state
+        hidden_state = self.attn2(self.norm2(hidden_state), context, deterministic=deterministic) + hidden_state
+        hidden_state = self.ff(self.norm3(hidden_state), deterministic=deterministic) + hidden_state
         return self.dropout_layer(hidden_state, deterministic=deterministic)
 
 
@@ -238,8 +238,9 @@ class FlaxTransformerBlock2D(nn.Module):
     gradient_checkpointing: str = 'nothing_saveable'
 
     def setup(self) -> None:
+
         features = self.heads_dim * self.num_attention_heads
-        self.norm1 = nn.GroupNorm(
+        self.norm = nn.GroupNorm(
             32, epsilon=self.epsilon
         )
         if self.use_linear_proj:
@@ -293,7 +294,7 @@ class FlaxTransformerBlock2D(nn.Module):
     def __call__(self, hidden_state: jnp.DeviceArray, context: jnp.DeviceArray, deterministic: bool = True):
         batch, height, width, channels = hidden_state.shape
         residual = hidden_state
-        hidden_state = self.norm1(hidden_state)
+        hidden_state = self.norm(hidden_state)
         if self.use_linear_proj:
             hidden_state = self.proj_in(
                 hidden_state.reshape(batch, height * width, channels)
