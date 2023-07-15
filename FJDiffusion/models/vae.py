@@ -249,8 +249,8 @@ class FlaxDecoder(nn.Module):
 
 
 class FlaxEncoder(nn.Module):
-    in_channels: int
-    out_channels: int
+    in_channels: int = 3
+    out_channels: int = 3
     double_z: bool = False
     dropout_rate: float = 0.0
     epsilon: float = 1e-5
@@ -273,7 +273,7 @@ class FlaxEncoder(nn.Module):
             precision=self.precision
         )
         self.conv_out = nn.Conv(
-            self.out_channels * 2 if self.double_z else self.out_channels,
+            2 * self.out_channels if self.double_z else self.out_channels,
             kernel_size=(3, 3),
             strides=(1, 1),
             padding=((1, 1), (1, 1)),
@@ -346,7 +346,7 @@ class AutoencoderKl(nn.Module):
     def setup(self) -> None:
         self.encoder = FlaxEncoder(
             in_channels=self.in_channels,
-            out_channels=self.out_channels,
+            out_channels=self.latent_channels,
             double_z=True,
             dropout_rate=self.dropout_rate,
             epsilon=self.epsilon,
