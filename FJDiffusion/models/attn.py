@@ -21,25 +21,25 @@ class FlaxBaseAttn(nn.Module):
     def setup(self) -> None:
         inner_dim = self.heads_dim * self.num_attention_heads
         self.scale = self.heads_dim ** -0.5
-        self.to_q = nn.Dense(inner_dim,
+        self.q = nn.Dense(inner_dim,
                           dtype=self.dtype,
                           param_dtype=self.param_dtype,
                           precision=self.precision,
                           kernel_init=jax.nn.initializers.normal(),
                           use_bias=False)
-        self.to_k = nn.Dense(inner_dim,
+        self.k = nn.Dense(inner_dim,
                           dtype=self.dtype,
                           param_dtype=self.param_dtype,
                           precision=self.precision,
                           kernel_init=jax.nn.initializers.normal(),
                           use_bias=False)
-        self.to_v = nn.Dense(inner_dim,
+        self.v = nn.Dense(inner_dim,
                           dtype=self.dtype,
                           param_dtype=self.param_dtype,
                           precision=self.precision,
                           kernel_init=jax.nn.initializers.normal(),
                           use_bias=False)
-        self.to_out_0 = nn.Dense(
+        self.out = nn.Dense(
             self.query_dim,
             dtype=self.dtype,
             param_dtype=self.param_dtype,
@@ -64,13 +64,13 @@ class FlaxBaseAttn(nn.Module):
                  context: typing.Optional[typing.Union[None, jnp.DeviceArray]] = None,
                  deterministic: bool = False):
         context = hidden_state if context is None else context
-        q = self.to_q(hidden_state)
-        v = self.to_v(context)
-        k = self.to_k(context)
+        q = self.q(hidden_state)
+        v = self.v(context)
+        k = self.k(context)
         q, k, v = self.split(q), self.split(k), self.split(v)
         attn = jax.nn.softmax(jnp.einsum('b i d,b j d-> b i j', q, k) * self.scale, axis=-1)
         attn = self.merge(jnp.einsum('b i j,b j d -> b i d', attn, v))
-        return self.dropout(self.to_out_0(attn), deterministic=deterministic)
+        return self.dropout(self.out(attn), deterministic=deterministic)
 
 
 class FlaxFeedForward(nn.Module):
