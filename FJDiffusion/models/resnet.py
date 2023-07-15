@@ -92,7 +92,7 @@ class FlaxResnetBlock2DNTime(nn.Module):
     def setup(self) -> None:
         out_c = self.out_c or self.in_c
         self.c1 = nn.Conv(
-            features=self.in_c,
+            features=out_c,
             kernel_size=(3, 3),
             strides=(1, 1),
             padding=((1, 1), (1, 1)),
