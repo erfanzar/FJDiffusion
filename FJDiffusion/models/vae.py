@@ -371,6 +371,7 @@ class AutoencoderKl(nn.Module):
             param_dtype=self.param_dtype,
             precision=self.precision
         )
+
         self.quant_conv = nn.Conv(
             2 * self.latent_channels,
             kernel_size=(1, 1),
