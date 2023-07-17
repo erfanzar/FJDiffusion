@@ -193,16 +193,17 @@ class Unet2DConfig(PretrainedConfig):
             ("norm1/(scale)", PartitionSpec("fsdp")),
             ("norm2/(scale)", PartitionSpec("fsdp")),
             ("norm3/(scale)", PartitionSpec("fsdp")),
-            ("conv_in/(kernel)", PartitionSpec("dp", "fsdp")),
+            ("conv_in/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("conv/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("l2/(kernel)", PartitionSpec("dp", "fsdp")),
             ("cs/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("c1/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("c2/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
-            ("proj_in/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
+            ("proj_in/(kernel)", PartitionSpec("dp", "fsdp")),
             ("conv_out/(kernel)", PartitionSpec("dp", None, "fsdp")),
             ('bias', PartitionSpec('dp')),
             ('.*', PartitionSpec(None))
+
         )
 
 
