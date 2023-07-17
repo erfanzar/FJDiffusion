@@ -1,3 +1,5 @@
+import os
+
 import flax.core
 import jax.lax
 
@@ -5,12 +7,17 @@ from FJDiffusion import AutoencoderKl, Unet2DConditionModel, Unet2DConfig, Autoe
 from .configs import get_clip_partition_rules
 from transformers import FlaxCLIPTextModel, CLIPTokenizer, CLIPTextConfig
 from typing import Optional, Tuple, Union
+from flax.training import train_state
 from jax import numpy as jnp
 from jax.experimental.mesh_utils import create_device_mesh
 from jax.sharding import Mesh
 from jax.experimental.pjit import pjit
-from fjutils.easylm import match_partition_rules
+from fjutils.easylm import match_partition_rules, make_shard_and_gather_fns
+from fjutils.utils import read_ckpt, save_ckpt
 from FJDiffusion.utils import BaseClass, prefix_print
+import logging
+
+logger = logging.getLogger()
 
 
 class MoonWalker(BaseClass):
@@ -29,7 +36,8 @@ class MoonWalker(BaseClass):
             unet_partition_rules: Optional[Union[None, tuple]] = None,
             linear_proj: bool = True,
             mesh_shape: Tuple[int, int, int] = (1, -1, 1),
-            backend: str = 'tpu'
+            backend: str = 'tpu',
+            rng: jax.random.PRNGKey = jax.random.PRNGKey(42)
     ):
         assert backend in ['cpu', 'tpu', 'gpu'], f'{backend} is not recognized available backends are cpu ,gpu and tpu'
         if backend == 'tpu':
@@ -46,6 +54,7 @@ class MoonWalker(BaseClass):
 
         self.mesh_shape = mesh_shape
         self.debug = debug
+        self.rng = rng
         self.backend = backend
         sharding_array = jnp.ones((len(jax.devices(backend)))).reshape(mesh_shape)
         self.sharding_shape = sharding_array.shape
@@ -63,6 +72,7 @@ class MoonWalker(BaseClass):
 
         config_unet_kwargs = config_unet.get_config_to_init()
         config_vae_kwargs = config_vae.get_config_to_init()
+        self.dtype = dtype
         config_unet_kwargs['dtype'] = dtype
         config_unet_kwargs['param_dtype'] = param_dtype
         config_unet_kwargs['precision'] = precision
@@ -107,6 +117,10 @@ class MoonWalker(BaseClass):
     def naming_mesh(cls):
         return 'dp', 'fsdp', 'mp',
 
+    def make_rng(self, num_split=1):
+        *k, self.rng = jax.random.split(self.rng, num_split + 1)
+        return k
+
     def create_mesh(self):
 
         physical_mesh = create_device_mesh(
@@ -116,6 +130,123 @@ class MoonWalker(BaseClass):
             physical_mesh,
             self.naming_mesh()
         )
+
+    def load_vae_params(self, vae_checkpoints_path: Union[os.PathLike, str]):
+        with self.mesh:
+            def init_vae_params():
+                vae_params = self.vae_model.init_weights(
+                    self.make_rng(1)[0]
+                )
+                return vae_params
+
+            vae_init_shape = jax.eval_shape(
+                init_vae_params
+            )
+            self.vae_matched_partition_rules = match_partition_rules(self.vae_partition, vae_init_shape)
+            shard_fns, _ = make_shard_and_gather_fns(
+                partition_specs=self.vae_matched_partition_rules,
+                dtype_specs=self.dtype
+            )
+            param = read_ckpt(vae_checkpoints_path, shard_fns=shard_fns)
+            self.vae_params = param
+        return param
+
+    def load_unet_params(self, unet_checkpoints_path: Union[os.PathLike, str]):
+        with self.mesh:
+            def init_unet_params():
+                unet_params = self.unet_model.init_weights(
+                    self.make_rng(1)[0]
+                )
+                return unet_params
+
+            unet_init_shape = jax.eval_shape(
+                init_unet_params
+            )
+            self.unet_matched_partition_rules = match_partition_rules(self.unet_partition, unet_init_shape)
+            shard_fns, _ = make_shard_and_gather_fns(
+                partition_specs=self.unet_matched_partition_rules,
+                dtype_specs=self.dtype
+            )
+            param = read_ckpt(unet_checkpoints_path, shard_fns=shard_fns)
+            self.unet_params = param
+        return param
+
+    def load_clip_params(self, clip_checkpoints_path: Union[os.PathLike, str]):
+        with self.mesh:
+            def init_clip_params():
+                clip_params = self.clip_model.init_weights(
+                    self.make_rng(1)[0]
+                )
+                return clip_params
+
+            clip_init_shape = jax.eval_shape(
+                init_clip_params
+            )
+            self.clip_matched_partition_rules = match_partition_rules(self.clip_partition, clip_init_shape)
+            shard_fns, _ = make_shard_and_gather_fns(
+                partition_specs=self.clip_matched_partition_rules,
+                dtype_specs=self.dtype
+            )
+            param = read_ckpt(clip_checkpoints_path, shard_fns=shard_fns)
+            self.clip_params = param
+        return param
+
+    def save_vae_params(self, path_to_save_checkpoints: Union[os.PathLike, str],
+                        vae_params: Union[train_state.TrainState, flax.core.FrozenDict, dict]):
+        with self.mesh:
+            def init_vae_params():
+                vp = self.vae_model.init_weights(
+                    self.make_rng(1)[0]
+                )
+                return vp
+
+            vae_init_shape = jax.eval_shape(
+                init_vae_params
+            )
+            self.vae_matched_partition_rules = match_partition_rules(self.vae_partition, vae_init_shape)
+            _, gather_fns = make_shard_and_gather_fns(
+                partition_specs=self.vae_matched_partition_rules,
+                dtype_specs=self.dtype
+            )
+            save_ckpt(vae_params, path=path_to_save_checkpoints, gather_fns=gather_fns)
+
+    def save_unet_params(self, path_to_save_checkpoints: Union[os.PathLike, str],
+                         unet_params: Union[train_state.TrainState, flax.core.FrozenDict, dict]):
+        with self.mesh:
+            def init_unet_params():
+                vp = self.unet_model.init_weights(
+                    self.make_rng(1)[0]
+                )
+                return vp
+
+            unet_init_shape = jax.eval_shape(
+                init_unet_params
+            )
+            self.unet_matched_partition_rules = match_partition_rules(self.unet_partition, unet_init_shape)
+            _, gather_fns = make_shard_and_gather_fns(
+                partition_specs=self.unet_matched_partition_rules,
+                dtype_specs=self.dtype
+            )
+            save_ckpt(unet_params, path=path_to_save_checkpoints, gather_fns=gather_fns)
+
+    def save_clip_params(self, path_to_save_checkpoints: Union[os.PathLike, str],
+                         clip_params: Union[train_state.TrainState, flax.core.FrozenDict, dict]):
+        with self.mesh:
+            def init_clip_params():
+                vp = self.clip_model.init_weights(
+                    self.make_rng(1)[0]
+                )
+                return vp
+
+            clip_init_shape = jax.eval_shape(
+                init_clip_params
+            )
+            self.clip_matched_partition_rules = match_partition_rules(self.clip_partition, clip_init_shape)
+            _, gather_fns = make_shard_and_gather_fns(
+                partition_specs=self.clip_matched_partition_rules,
+                dtype_specs=self.dtype
+            )
+            save_ckpt(clip_params, path=path_to_save_checkpoints, gather_fns=gather_fns)
 
     def do_init(self, rng: jax.random.PRNGKey):
         clip_rng, unet_rng, vae_rng = jax.random.split(rng, 3)
