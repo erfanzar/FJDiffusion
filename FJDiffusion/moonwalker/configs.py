@@ -173,10 +173,10 @@ class Unet2DConfig(PretrainedConfig):
             ("conv_in/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("conv/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("l2/(kernel)", PartitionSpec("dp", "fsdp")),
-            ("cs/(kernel)", PartitionSpec("mp", None, None, "fsdp")),
-            ("c1/(kernel)", PartitionSpec("mp", None, None, "fsdp")),
+            ("cs/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
+            ("c1/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("c2/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
-            ("proj_in/(kernel)", PartitionSpec("mp", None, None, "fsdp")),
+            ("proj_in/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("conv_out/(kernel)", PartitionSpec("dp", None, "fsdp")),
             ('bias', PartitionSpec('dp')),
             ('.*', PartitionSpec(None))
@@ -196,10 +196,10 @@ class Unet2DConfig(PretrainedConfig):
             ("conv_in/(kernel)", PartitionSpec("dp", "fsdp")),
             ("conv/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("l2/(kernel)", PartitionSpec("dp", "fsdp")),
-            ("cs/(kernel)", PartitionSpec("mp", None, None, "fsdp")),
-            ("c1/(kernel)", PartitionSpec("mp", None, None, "fsdp")),
+            ("cs/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
+            ("c1/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("c2/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
-            ("proj_in/(kernel)", PartitionSpec("mp", None, None, "fsdp")),
+            ("proj_in/(kernel)", PartitionSpec("dp", None, None, "fsdp")),
             ("conv_out/(kernel)", PartitionSpec("dp", None, "fsdp")),
             ('bias', PartitionSpec('dp')),
             ('.*', PartitionSpec(None))
@@ -208,7 +208,7 @@ class Unet2DConfig(PretrainedConfig):
 
 def get_clip_partition_rules():
     return (
-        ("token_embedding/embedding", PartitionSpec("mp", 'fsdp')),
+        ("token_embedding/embedding", PartitionSpec("dp", 'fsdp')),
         ("layer_norm1/(scale|bias)", PartitionSpec("fsdp")),
         ("fc2/(kernel|bias)", PartitionSpec("fsdp")),
         ("v_proj/(kernel|bias)", PartitionSpec("fsdp")),
