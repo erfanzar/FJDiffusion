@@ -332,3 +332,31 @@ class MoonWalker(BaseClass):
                          f"{unet_prm_size}")
             prefix_print('VAE Model Parameters (Million)',
                          f"{vae_prm_size}")
+
+    def create_state_function(self, params, params_partition_rules, partition_rule, apply_fn, optimizer,
+                              dtype: jnp.dtype = jnp.bfloat16):
+        def g(parameters):
+            return train_state.TrainState.create(
+                params=parameters,
+                apply_fn=apply_fn,
+                tx=optimizer
+            )
+
+        shape = jax.eval_shape(
+            g, params
+        )
+        partition_rule = match_partition_rules(partition_rule, shape)
+        shard_fns, _ = make_shard_and_gather_fns(
+            partition_rule, dtype_specs=dtype
+        )
+        sharded_g = pjit(
+            g,
+            in_shardings=params_partition_rules,
+            out_shardings=partition_rule
+        )
+        with self.mesh:
+            p = sharded_g(params)
+        return p
+
+    def train(self, dataset):
+        ...
