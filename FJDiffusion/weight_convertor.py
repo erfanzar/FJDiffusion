@@ -85,12 +85,13 @@ def convert_unet_weights_diff_to_fj(unet_params_flatten, debug: bool = False):
                     prm = prm[:2] + ('cs',) + prm[3:]
                 if prm[2] == 'time_emb_proj':
                     prm = prm[:2] + ('time_emb',) + prm[3:]
-
+                # print(prm[2])
         # if prm[0] == 'bottle_neck':
         #     if prm[1].startswith('resnets_'):
         #         if prm[2] == 'conv1':
         #             prm = prm[:2] + ('c1',) + prm[3:]
-
+        if prm[0] == 'mid_block':
+            prm = ('bottle_neck',) + prm[1:]
         if prm[0].startswith('time_embedding'):
             prm = ('time_emb',) + prm[1:]
             if prm[1] == 'linear_1':
