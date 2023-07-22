@@ -6,7 +6,7 @@ from typing import List, Tuple, Any
 from functools import partial
 from einops import rearrange
 from fjutils.utils import with_sharding_constraint
-from jax.experimental.pjit import PartitionSpec as PS
+from jax.sharding import PartitionSpec as PS
 
 
 class SelfAttentionWC(nn.Module):

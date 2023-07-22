@@ -2,7 +2,7 @@ from transformers import PretrainedConfig
 from typing import Tuple, Optional, Union
 import jax.numpy as jnp
 import jax
-from jax.experimental.pjit import PartitionSpec
+from jax.sharding import PartitionSpec
 
 
 class AutoencoderKlConfig(PretrainedConfig):
