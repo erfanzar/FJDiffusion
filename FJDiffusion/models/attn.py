@@ -175,7 +175,7 @@ class FlaxEncoderBaseTransformerBlock(nn.Module):
             hidden_state = self.attn1(self.norm1(hidden_state), context=None,
                                       deterministic=deterministic) + hidden_state
 
-        hidden_state = self.attn2(self.norm2(hidden_state), context, deterministic=deterministic) + hidden_state
+        hidden_state = self.attn2(self.norm2(hidden_state), context=context, deterministic=deterministic) + hidden_state
         hidden_state = self.ff(self.norm3(hidden_state), deterministic=deterministic) + hidden_state
         return self.dropout_layer(hidden_state, deterministic=deterministic)
 
