@@ -228,7 +228,7 @@ class Unet2DConditionModel(nn.Module):
                 )
             else:
                 raise RuntimeError()
-            down_block_res_hidden_states += res_hidden_states
+            down_block_res_hidden_states += tuple(res_hidden_states)
         if down_block_additional_residuals is not None:
             new_down_block_res_hidden_states = []
 
