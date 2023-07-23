@@ -214,8 +214,11 @@ class FlaxCrossAttnUpBlock(nn.Module):
         if isinstance(output_states, tuple):
             output_states = list(output_states)
             output_states = output_states[::-1]
+
         for res, atn in zip(self.resnets, self.attentions):
-            hidden_state = jnp.concatenate([hidden_state, output_states.pop()], axis=-1)
+            enc = output_states[-1]
+            output_states = output_states[:-1]
+            hidden_state = jnp.concatenate([hidden_state, enc], axis=-1)
             hidden_state = res(hidden_state, time, deterministic=deterministic)
             hidden_state = atn(hidden_state, encoder_hidden_states, deterministic=deterministic)
         if self.add_upsampler:
@@ -276,7 +279,9 @@ class FlaxUpBlock2D(nn.Module):
                  deterministic: bool = True
                  ):
         for res in self.resnets:
-            hidden_state = jnp.concatenate([hidden_state, output_states.pop()], axis=-1)
+            enc = output_states[-1]
+            output_states = output_states[:-1]
+            hidden_state = jnp.concatenate([hidden_state, enc], axis=-1)
             hidden_state = res(hidden_state, time, deterministic=deterministic)
 
         if self.add_upsampler:
