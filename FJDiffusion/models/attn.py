@@ -1,12 +1,13 @@
 import math
 import typing
 from functools import partial
-
+from jax.sharding import PartitionSpec
 import jax
 from jax import numpy as jnp
 from flax import linen as nn
 
 from FJDiffusion.models.utils import get_gradient_checkpointing_policy
+from fjutils import with_sharding_constraint
 
 
 class FlaxBaseAttn(nn.Module):
@@ -64,6 +65,8 @@ class FlaxBaseAttn(nn.Module):
                  context: typing.Optional[typing.Union[None, jnp.DeviceArray]] = None,
                  deterministic: bool = False):
         context = hidden_state if context is None else context
+        context = with_sharding_constraint(context, PartitionSpec(('dp', 'fsdp')))
+        hidden_state = with_sharding_constraint(hidden_state, PartitionSpec(('dp', 'fsdp')))
         q = self.q(hidden_state)
         v = self.v(context)
         k = self.k(context)
