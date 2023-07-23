@@ -142,7 +142,7 @@ class FlaxCrossAttnUpBlock(nn.Module):
     out_channels: int
     perv_out_channels: int
     num_attention_heads: int
-    num_hidden_layers: int = 1
+    num_hidden_layers: int = 2
     dropout_rate: float = 0.0
     epsilon: float = 1e-5
     only_cross_attn: bool = False
