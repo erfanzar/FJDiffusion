@@ -211,9 +211,6 @@ class FlaxCrossAttnUpBlock(nn.Module):
                  encoder_hidden_states: jnp.DeviceArray,
                  deterministic: bool = True
                  ):
-        if isinstance(output_states, tuple):
-            output_states = list(output_states)
-            output_states = output_states[::-1]
         output_states = tuple(output_states)
         for res, atn in zip(self.resnets, self.attentions):
             enc = output_states[-1]
