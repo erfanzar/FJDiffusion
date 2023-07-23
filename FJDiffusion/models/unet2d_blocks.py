@@ -214,7 +214,7 @@ class FlaxCrossAttnUpBlock(nn.Module):
         if isinstance(output_states, tuple):
             output_states = list(output_states)
             output_states = output_states[::-1]
-
+        output_states = tuple(output_states)
         for res, atn in zip(self.resnets, self.attentions):
             enc = output_states[-1]
             output_states = output_states[:-1]
@@ -278,6 +278,7 @@ class FlaxUpBlock2D(nn.Module):
                  output_states: list,
                  deterministic: bool = True
                  ):
+        output_states = tuple(output_states)
         for res in self.resnets:
             enc = output_states[-1]
             output_states = output_states[:-1]
