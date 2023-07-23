@@ -230,12 +230,12 @@ class Unet2DConditionModel(nn.Module):
                 raise RuntimeError()
             down_block_res_hidden_states += tuple(res_hidden_states)
         if down_block_additional_residuals is not None:
-            new_down_block_res_hidden_states = []
+            new_down_block_res_hidden_states = ()
 
             for down_block_res_hidden_states, down_block_additional_residual in zip(
                     down_block_res_hidden_states, down_block_additional_residuals
             ):
-                new_down_block_res_hidden_states.append(down_block_res_hidden_states + down_block_additional_residual)
+                new_down_block_res_hidden_states += (down_block_res_hidden_states + down_block_additional_residual,)
 
             down_block_res_hidden_states = new_down_block_res_hidden_states
         hidden_states = self.bottle_neck(
