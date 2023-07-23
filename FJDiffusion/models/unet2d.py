@@ -214,7 +214,7 @@ class Unet2DConditionModel(nn.Module):
 
         time = self.time_emb(self.time_proj(timestep))
         hidden_states = self.conv_in(jnp.transpose(hidden_states, (0, 2, 3, 1)))
-        down_block_res_hidden_states = [hidden_states]
+        down_block_res_hidden_states = (hidden_states,)
         for block in self.down_blocks:
             if isinstance(block, FlaxCrossAttnDownBlock):
                 hidden_states, res_hidden_states = block(hidden_state=hidden_states,
@@ -228,7 +228,7 @@ class Unet2DConditionModel(nn.Module):
                 )
             else:
                 raise RuntimeError()
-            down_block_res_hidden_states.append(res_hidden_states)
+            down_block_res_hidden_states += res_hidden_states
         if down_block_additional_residuals is not None:
             new_down_block_res_hidden_states = []
 
@@ -248,7 +248,8 @@ class Unet2DConditionModel(nn.Module):
             hidden_states += bottle_neck_additional_residuals
 
         for block in self.up_blocks:
-            res_hidden_states = down_block_res_hidden_states.pop()
+            res_hidden_states = down_block_res_hidden_states[-(self.num_hidden_layers_per_block + 1):]
+            down_block_res_hidden_states = down_block_res_hidden_states[: -(self.num_hidden_layers_per_block + 1)]
             if isinstance(block, FlaxCrossAttnUpBlock):
                 hidden_states = block(
                     hidden_state=hidden_states,
