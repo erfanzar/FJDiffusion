@@ -98,6 +98,11 @@ def convert_unet_weights_diff_to_fj(unet_params_flatten, debug: bool = False):
                 prm = prm[0:1] + ('l1',) + prm[2:]
             if prm[1] == 'linear_2':
                 prm = prm[0:1] + ('l2',) + prm[2:]
+        if prm[0].startswith('up_blocks_'):
+            if prm[1] == 'upsamplers_0':
+                prm = prm[0:1] + ("upsampler",) + prm[2:]
+        if prm[0] == 'conv_norm_out':
+            prm = ('norm_out',) + prm[1:]
         if debug:
             print(f'{org_prm} -> {prm}')
         new_params[prm] = v
